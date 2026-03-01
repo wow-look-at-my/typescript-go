@@ -190,6 +190,21 @@ func getOwnEmitOutputFilePath(fileName string, options *core.CompilerOptions, ho
 	return emitOutputFilePathWithoutExtension + extension
 }
 
+func GetBundleOutputPaths(options *core.CompilerOptions) *OutputPaths {
+	paths := &OutputPaths{jsFilePath: options.OutFile}
+	if options.SourceMap.IsTrue() && !options.InlineSourceMap.IsTrue() {
+		paths.sourceMapFilePath = options.OutFile + ".map"
+	}
+	if options.GetEmitDeclarations() {
+		paths.declarationFilePath = tspath.ChangeExtension(
+			options.OutFile, getDeclarationEmitExtensionForPath(options.OutFile))
+		if options.GetAreDeclarationMapsEnabled() {
+			paths.declarationMapPath = paths.declarationFilePath + ".map"
+		}
+	}
+	return paths
+}
+
 func GetSourceMapFilePath(jsFilePath string, options *core.CompilerOptions) string {
 	if options.SourceMap.IsTrue() && !options.InlineSourceMap.IsTrue() {
 		return jsFilePath + ".map"

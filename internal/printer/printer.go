@@ -5123,6 +5123,41 @@ func (p *Printer) Write(node *ast.Node, sourceFile *ast.SourceFile, writer EmitT
 	p.sourceMapLineCharCache = savedSourceMapLineCharCache
 }
 
+// WriteBundleSourceFile writes a source file to the given writer without clearing it,
+// allowing multiple source files to be accumulated into a single output.
+// The source map generator state is preserved across calls.
+func (p *Printer) WriteBundleSourceFile(sourceFile *ast.SourceFile, writer EmitTextWriter, sourceMapGenerator *sourcemap.Generator) {
+	savedCurrentSourceFile := p.currentSourceFile
+	savedWriter := p.writer
+	savedUniqueHelperNames := p.uniqueHelperNames
+	savedSourceMapsDisabled := p.sourceMapsDisabled
+	savedSourceMapGenerator := p.sourceMapGenerator
+	savedSourceMapSource := p.sourceMapSource
+	savedSourceMapSourceIndex := p.sourceMapSourceIndex
+	savedSourceMapLineCharCache := p.sourceMapLineCharCache
+
+	p.sourceMapsDisabled = sourceMapGenerator == nil
+	p.sourceMapGenerator = sourceMapGenerator
+	p.sourceMapSource = nil
+	p.sourceMapSourceIndex = -1
+	p.sourceMapLineCharCache = nil
+
+	p.setSourceFile(sourceFile)
+	p.writer = writer
+	// Note: do NOT call writer.Clear() — we accumulate multiple files
+
+	p.emitSourceFile(sourceFile)
+
+	p.currentSourceFile = savedCurrentSourceFile
+	p.writer = savedWriter
+	p.uniqueHelperNames = savedUniqueHelperNames
+	p.sourceMapsDisabled = savedSourceMapsDisabled
+	p.sourceMapGenerator = savedSourceMapGenerator
+	p.sourceMapSource = savedSourceMapSource
+	p.sourceMapSourceIndex = savedSourceMapSourceIndex
+	p.sourceMapLineCharCache = savedSourceMapLineCharCache
+}
+
 //
 // Comments
 //
