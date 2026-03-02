@@ -1,0 +1,12 @@
+--- old.out-flag2(target=es2015).js
++++ new.out-flag2(target=es2015).js
+@@= skipped -13, +13 lines =@@
+ class B {
+ }
+ //# sourceMappingURL=c.js.map
+-
+-//// [c.d.ts]
+-declare class A {
+-}
+-declare class B {
+-}

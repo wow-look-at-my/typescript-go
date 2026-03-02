@@ -1,0 +1,12 @@
+--- old.jsFileCompilationEmitDeclarations.js
++++ new.jsFileCompilationEmitDeclarations.js
+@@= skipped -14, +14 lines =@@
+ }
+ function foo() {
+ }
+-
+-
+-//// [out.d.ts]
+-declare class c {
+-}
+-declare function foo(): void;

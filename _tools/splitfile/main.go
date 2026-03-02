@@ -72,12 +72,6 @@ func main() {
 	}
 
 	// Collect byte ranges to extract (sorted by position)
-	type region struct {
-		start int
-		end   int
-		name  string
-		decl  ast.Decl
-	}
 	var extractRegions []region
 	var keepRegions []region
 

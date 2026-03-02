@@ -1,0 +1,11 @@
+--- old.jsFileCompilationDuplicateVariable.js
++++ new.jsFileCompilationDuplicateVariable.js
+@@= skipped -10, +10 lines =@@
+ "use strict";
+ var x = 10;
+ var x = "hello"; // Error is recorded here, but suppressed because the js file isn't checked
+-
+-
+-//// [out.d.ts]
+-declare var x: number;
+-declare var x: string;

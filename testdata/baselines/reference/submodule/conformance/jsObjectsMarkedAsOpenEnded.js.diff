@@ -1,0 +1,12 @@
+--- old.jsObjectsMarkedAsOpenEnded.js
++++ new.jsObjectsMarkedAsOpenEnded.js
+@@= skipped -39, +39 lines =@@
+ var variable = {};
+ variable.a = 0;
+ class C {
++    initializedMember = {};
+     constructor() {
+-        this.initializedMember = {};
+         this.member = {};
+         this.member.a = 0;
+     }

@@ -1,0 +1,10 @@
+error TS5053: Option 'outFile' cannot be specified with option 'module'.
+
+
+!!! error TS5053: Option 'outFile' cannot be specified with option 'module'.
+==== a.ts (0 errors) ====
+    class A { }
+    
+==== b.ts (0 errors) ====
+    class B { }
+    

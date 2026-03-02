@@ -1,0 +1,14 @@
+--- old.bundledDtsLateExportRenaming.errors.txt
++++ new.bundledDtsLateExportRenaming.errors.txt
+@@= skipped -0, +0 lines =@@
+-error TS5101: Option 'outFile' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
+-
+-
+-!!! error TS5101: Option 'outFile' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
++error TS5053: Option 'outFile' cannot be specified with option 'module'.
++
++
++!!! error TS5053: Option 'outFile' cannot be specified with option 'module'.
+ ==== index.ts (0 errors) ====
+     export * from "./nested";
+     

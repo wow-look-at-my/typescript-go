@@ -1,0 +1,24 @@
+--- old.moduleNoneDynamicImport(target=es2015).errors.txt
++++ new.moduleNoneDynamicImport(target=es2015).errors.txt
+@@= skipped -0, +0 lines =@@
+-error TS5101: Option 'outFile' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
+-error TS5107: Option 'module=None' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
+-
+-
+-!!! error TS5101: Option 'outFile' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
+-!!! error TS5107: Option 'module=None' is deprecated and will stop functioning in TypeScript 7.0. Specify compilerOption '"ignoreDeprecations": "6.0"' to silence this error.
+-==== /a.ts (0 errors) ====
++error TS5055: Cannot write file '/b.js' because it would overwrite input file.
++  Adding a tsconfig.json file will help organize projects that contain both TypeScript and JavaScript files. Learn more at https://aka.ms/tsconfig.
++/a.ts(1,13): error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', 'node18', 'node20', or 'nodenext'.
++
++
++!!! error TS5055: Cannot write file '/b.js' because it would overwrite input file.
++!!! error TS5055:   Adding a tsconfig.json file will help organize projects that contain both TypeScript and JavaScript files. Learn more at https://aka.ms/tsconfig.
++==== /a.ts (1 errors) ====
+     const foo = import("./b");
++                ~~~~~~~~~~~~~
++!!! error TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', 'node18', 'node20', or 'nodenext'.
+     
+ ==== /b.js (0 errors) ====
+     export default 1;

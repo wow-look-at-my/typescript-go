@@ -43,8 +43,14 @@ func TestCompilerOptionsDeclaration(t *testing.T) {
 
 		lowerName := strings.ToLower(field.Name)
 
+		if _, ok := internalOptionsMap[lowerName]; ok {
+			continue
+		}
+
 		decl := decls[lowerName]
-		assert.NotNil(t, decl)
+		if !assert.NotNilf(t, decl, "no option declaration for CompilerOptions field %s", field.Name) {
+			continue
+		}
 
 		delete(decls, lowerName)
 

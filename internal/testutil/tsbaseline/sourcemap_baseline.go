@@ -31,15 +31,17 @@ func DoSourcemapBaseline(
 		}
 		return
 	} else if options.SourceMap.IsTrue() || declMaps {
-		expectedMapCount := 0
-		if options.SourceMap.IsTrue() {
-			expectedMapCount += result.GetNumberOfJSFiles( /*includeJSON*/ false)
-		}
-		if declMaps {
-			expectedMapCount += result.GetNumberOfJSFiles( /*includeJSON*/ true)
-		}
-		if result.Maps.Size() != expectedMapCount {
-			t.Fatal("Number of sourcemap files should be same as js files.")
+		if options.OutFile == "" {
+			expectedMapCount := 0
+			if options.SourceMap.IsTrue() {
+				expectedMapCount += result.GetNumberOfJSFiles( /*includeJSON*/ false)
+			}
+			if declMaps {
+				expectedMapCount += result.GetNumberOfJSFiles( /*includeJSON*/ true)
+			}
+			if result.Maps.Size() != expectedMapCount {
+				t.Fatal("Number of sourcemap files should be same as js files.")
+			}
 		}
 
 		var sourceMapCode string

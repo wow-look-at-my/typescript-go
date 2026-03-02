@@ -1,0 +1,28 @@
+--- old.uniqueSymbolsDeclarationsInJsErrors.js
++++ new.uniqueSymbolsDeclarationsInJsErrors.js
+@@= skipped -20, +20 lines =@@
+ //// [uniqueSymbolsDeclarationsInJsErrors-out.js]
+ "use strict";
+ class C {
+-}
+-
+-
+-//// [uniqueSymbolsDeclarationsInJsErrors-out.d.ts]
+-declare class C {
+     /**
+      * @type {unique symbol}
+      */
+-    static readwriteStaticType: unique symbol;
++    static readwriteStaticType;
+     /**
+      * @type {unique symbol}
+      * @readonly
+      */
+-    static readonly readonlyType: unique symbol;
++    static readonlyType;
+     /**
+      * @type {unique symbol}
+      */
+-    static readwriteType: unique symbol;
++    static readwriteType;
+ }

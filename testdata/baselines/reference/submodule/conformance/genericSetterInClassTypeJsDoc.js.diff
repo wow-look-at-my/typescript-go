@@ -1,0 +1,20 @@
+--- old.genericSetterInClassTypeJsDoc.js
++++ new.genericSetterInClassTypeJsDoc.js
+@@= skipped -44, +44 lines =@@
+     }
+ }
+ new Box(3).value = 3;
+-
+-
+-//// [genericSetterInClassTypeJsDoc-out.d.ts]
+-/**
+- * @template T
+- */
+-declare class Box<T> {
+-    /** @param {T} initialValue */
+-    constructor(initialValue: T);
+-    set value(value: T);
+-    /** @type {T} */
+-    get value(): T;
+-    #private;
+-}

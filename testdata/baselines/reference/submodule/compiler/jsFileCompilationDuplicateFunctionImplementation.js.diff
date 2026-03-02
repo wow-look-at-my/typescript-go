@@ -1,0 +1,11 @@
+--- old.jsFileCompilationDuplicateFunctionImplementation.js
++++ new.jsFileCompilationDuplicateFunctionImplementation.js
+@@= skipped -18, +18 lines =@@
+ function foo() {
+     return 30;
+ }
+-
+-
+-//// [out.d.ts]
+-declare function foo(): number;
+-declare function foo(): number;
