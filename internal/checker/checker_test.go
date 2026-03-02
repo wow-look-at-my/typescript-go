@@ -55,9 +55,8 @@ foo.bar;`
 	nodes := []*ast.Node{interfaceId, varId, propAccess}
 	for _, node := range nodes {
 		symbol := c.GetSymbolAtLocation(node)
-		if symbol == nil {
-			t.Fatalf("Expected symbol to be non-nil")
-		}
+		require.NotNil(t, symbol)
+
 	}
 }
 

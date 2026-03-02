@@ -569,16 +569,14 @@ func autoImportStats(t *testing.T, session *project.Session) *autoimport.CacheSt
 	snapshot, release := session.Snapshot()
 	defer release()
 	registry := snapshot.AutoImportRegistry()
-	if registry == nil {
-		t.Fatal("auto import registry not initialized")
-	}
+	require.NotNil(t, registry)
+
 	return registry.GetCacheStats()
 }
 
 func singleBucket(t *testing.T, buckets []autoimport.BucketStats) autoimport.BucketStats {
 	t.Helper()
-	if len(buckets) != 1 {
-		t.Fatalf("expected 1 bucket, got %d", len(buckets))
-	}
+	require.Equal(t, 1, len(buckets))
+
 	return buckets[0]
 }

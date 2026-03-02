@@ -29,9 +29,8 @@ func BenchmarkPackageJSON(b *testing.B) {
 			b.Run(f.Name(), func(b *testing.B) {
 				for b.Loop() {
 					var p packagejson.Fields
-					if err := json.Unmarshal(content, &p); err != nil {
-						b.Fatal(err)
-					}
+					require.NoError(b, json.Unmarshal(content, &p))
+
 				}
 			})
 		})
@@ -40,9 +39,8 @@ func BenchmarkPackageJSON(b *testing.B) {
 			b.Run(f.Name(), func(b *testing.B) {
 				for b.Loop() {
 					var p packagejson.Fields
-					if err := json.Unmarshal(content, &p); err != nil {
-						b.Fatal(err)
-					}
+					require.NoError(b, json.Unmarshal(content, &p))
+
 				}
 			})
 		})

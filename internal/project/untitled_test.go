@@ -10,6 +10,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/lsp/lsproto"
 	"github.com/microsoft/typescript-go/internal/testutil/projecttestutil"
 	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestUntitledReferences(t *testing.T) {
@@ -25,10 +26,7 @@ func TestUntitledReferences(t *testing.T) {
 
 	backToURI := lsconv.FileNameToDocumentURI(convertedFileName)
 	t.Logf("Filename '%s' converts back to URI '%s'", convertedFileName, backToURI)
-
-	if string(backToURI) != string(untitledURI) {
-		t.Errorf("Round-trip conversion failed: '%s' -> '%s' -> '%s'", untitledURI, convertedFileName, backToURI)
-	}
+	assert.Equal(t, string(untitledURI), string(backToURI))
 
 	// Create a test case that simulates how untitled files should work
 	testContent := `let x = 42;

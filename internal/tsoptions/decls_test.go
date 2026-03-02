@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/core"
+	"github.com/wow-look-at-my/testify/assert"
 	"github.com/microsoft/typescript-go/internal/tsoptions"
 )
 
@@ -43,14 +44,8 @@ func TestCompilerOptionsDeclaration(t *testing.T) {
 		lowerName := strings.ToLower(field.Name)
 
 		decl := decls[lowerName]
-		if decl == nil {
-			if name, ok := internalOptionsMap[lowerName]; ok {
-				checkCompilerOptionJsonTagName(t, field, name)
-				continue
-			}
-			t.Errorf("CompilerOptions.%s has no options declaration", field.Name)
-			continue
-		}
+		assert.NotNil(t, decl)
+
 		delete(decls, lowerName)
 
 		checkCompilerOptionJsonTagName(t, field, decl.Name)
@@ -73,7 +68,6 @@ func checkCompilerOptionJsonTagName(t *testing.T, field reflect.StructField, nam
 	t.Helper()
 	want := name + ",omitzero"
 	got := field.Tag.Get("json")
-	if got != want {
-		t.Errorf("Field %s has json tag %s, but the option declaration has name %s", field.Name, got, want)
-	}
+	assert.Equal(t, want, got)
+
 }

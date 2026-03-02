@@ -9,7 +9,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/format"
 	"github.com/microsoft/typescript-go/internal/ls/lsutil"
 	"github.com/microsoft/typescript-go/internal/parser"
-	"github.com/wow-look-at-my/testify/require"
+
 	"github.com/wow-look-at-my/testify/assert"
 )
 

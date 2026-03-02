@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/bundled"
+	"github.com/wow-look-at-my/testify/assert"
+	"github.com/wow-look-at-my/testify/require"
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/json"
 	"github.com/microsoft/typescript-go/internal/jsonrpc"
@@ -20,21 +22,21 @@ import (
 )
 
 var (
-	replay      = flag.String("replay", "", "Path to replay file")
-	testDir     = flag.String("testDir", "", "Path to project directory")
-	simple      = flag.Bool("simple", false, "Replay only file opening and closing, plus the final request")
-	superSimple = flag.Bool("superSimple", false, "Replay only the final file opening and the final request")
+	replay		= flag.String("replay", "", "Path to replay file")
+	testDir		= flag.String("testDir", "", "Path to project directory")
+	simple		= flag.Bool("simple", false, "Replay only file opening and closing, plus the final request")
+	superSimple	= flag.Bool("superSimple", false, "Replay only the final file opening and the final request")
 )
 
 type initialArguments struct {
-	RootDirUriPlaceholder string `json:"rootDirUriPlaceholder"`
-	RootDirPlaceholder    string `json:"rootDirPlaceholder"`
+	RootDirUriPlaceholder	string	`json:"rootDirUriPlaceholder"`
+	RootDirPlaceholder	string	`json:"rootDirPlaceholder"`
 }
 
 type rawMessage struct {
-	Kind   string     `json:"kind"`
-	Method string     `json:"method"`
-	Params json.Value `json:"params"`
+	Kind	string		`json:"kind"`
+	Method	string		`json:"method"`
+	Params	json.Value	`json:"params"`
 }
 
 func TestReplay(t *testing.T) {
@@ -42,20 +44,19 @@ func TestReplay(t *testing.T) {
 	if replay == nil || *replay == "" {
 		t.Skip("no replay file specified")
 	}
-	if testDir == nil || *testDir == "" {
-		t.Fatal("testDir must be specified")
-	}
+	require.False(t, testDir == nil || *testDir == "")
+
 	testDirUri := lsconv.FileNameToDocumentURI(*testDir)
 
 	fs := bundled.WrapFS(osvfs.FS())
 	defaultLibraryPath := bundled.LibPath()
 	typingsLocation := osvfs.GetGlobalTypingsCacheLocation()
 	serverOpts := lsp.ServerOptions{
-		Err:                os.Stderr,
-		Cwd:                core.Must(os.Getwd()),
-		FS:                 fs,
-		DefaultLibraryPath: defaultLibraryPath,
-		TypingsLocation:    typingsLocation,
+		Err:			os.Stderr,
+		Cwd:			core.Must(os.Getwd()),
+		FS:			fs,
+		DefaultLibraryPath:	defaultLibraryPath,
+		TypingsLocation:	typingsLocation,
 		NpmInstall: func(cwd string, args []string) ([]byte, error) {
 			cmd := exec.Command("npm", args...)
 			cmd.Dir = cwd
@@ -66,31 +67,24 @@ func TestReplay(t *testing.T) {
 	client, closeClient := lsptestutil.NewLSPClient(t, serverOpts, nil)
 	defer func() {
 		err := closeClient()
-		if err != nil {
-			t.Errorf("goroutine error: %v", err)
-		}
+		assert.Nil(t, err)
+
 	}()
 
 	f, err := os.Open(*replay)
-	if err != nil {
-		t.Fatalf("failed to read replay file: %v", err)
-	}
+	require.Nil(t, err)
+
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-
-	if !scanner.Scan() {
-		t.Fatalf("replay file is empty")
-	}
+	require.True(t, scanner.Scan())
 
 	rootDirPlaceholder := "@PROJECT_ROOT@"
 	rootDirUriPlaceholder := "@PROJECT_ROOT_URI@"
 	firstLine := scanner.Bytes()
 	var initObj initialArguments
 	err = json.Unmarshal(firstLine, &initObj)
-	if err != nil {
-		t.Fatalf("failed to parse initial arguments: %v", err)
-	}
+	require.Nil(t, err)
 
 	if initObj.RootDirPlaceholder != "" {
 		rootDirPlaceholder = initObj.RootDirPlaceholder
@@ -110,14 +104,11 @@ func TestReplay(t *testing.T) {
 		line = rootDirReplacer.Replace(line)
 		var rawMsg rawMessage
 		err := json.Unmarshal([]byte(line), &rawMsg)
-		if err != nil {
-			t.Fatalf("failed to parse message: %v", err)
-		}
+		require.Nil(t, err)
+
 		messages = append(messages, &rawMsg)
 	}
-	if err := scanner.Err(); err != nil {
-		t.Fatalf("error scanning replay file: %v", err)
-	}
+	require.NoError(t, scanner.Err())
 
 	if simple != nil && *simple {
 		// Include only initialization, file opening/changing/closing, and shutdown messages, plus the final request.
@@ -179,35 +170,28 @@ func TestReplay(t *testing.T) {
 		}
 
 		var rpcMsg struct {
-			JSONRPC string      `json:"jsonrpc"`
-			ID      *jsonrpc.ID `json:"id"`
-			Method  string      `json:"method"`
-			Params  json.Value  `json:"params"`
+			JSONRPC	string		`json:"jsonrpc"`
+			ID	*jsonrpc.ID	`json:"id"`
+			Method	string		`json:"method"`
+			Params	json.Value	`json:"params"`
 		}
 		rpcMsg.JSONRPC = "2.0"
 		rpcMsg.ID = reqID
 		rpcMsg.Method = rawMsg.Method
 		rpcMsg.Params = rawMsg.Params
 		rpcData, err := json.Marshal(rpcMsg)
-		if err != nil {
-			t.Fatalf("failed to marshal rpc message: %v", err)
-		}
+		require.Nil(t, err)
 
 		var msg lsproto.Message
 		err = json.Unmarshal(rpcData, &msg)
-		if err != nil {
-			t.Fatalf("failed to unmarshal rpc message into lsproto.Message: %v", err)
-		}
+		require.Nil(t, err)
 
 		switch kind {
 		case jsonrpc.MessageKindRequest:
 			response, ok := client.SendRequestWorker(t, msg.AsRequest(), reqID)
-			if !ok {
-				t.Fatalf("failed to send request for method %s", rawMsg.Method)
-			}
-			if response.Error != nil {
-				t.Fatalf("server returned error for method %s params %s:\n%v", rawMsg.Method, rawMsg.Params, response.Error)
-			}
+			require.True(t, ok)
+			require.Nil(t, response.Error)
+
 		case jsonrpc.MessageKindNotification:
 			client.WriteMsg(t, &msg)
 		default:

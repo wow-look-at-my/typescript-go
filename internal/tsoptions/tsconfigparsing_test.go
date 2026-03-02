@@ -844,9 +844,8 @@ func baselineParseConfigWith(t *testing.T, baselineFileName string, noSubmoduleB
 		parsedConfigFileContent := getParsed(config, host, basePath)
 
 		baselineContent.WriteString("Fs::\n")
-		if err := printFS(&baselineContent, host.FS(), "/"); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, printFS(&baselineContent, host.FS(), "/"))
+
 		baselineContent.WriteString("\n")
 		baselineContent.WriteString("configFileName:: " + config.configFileName + "\n")
 		if noSubmoduleBaseline {

@@ -17,6 +17,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/baseline"
 	"github.com/microsoft/typescript-go/internal/testutil/jstest"
 	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 var testFiles = []string{
@@ -59,15 +60,11 @@ func TestGetTokenAtPosition(t *testing.T) {
 		// This should not panic - it previously panicked with:
 		// "did not expect KindParenthesizedExpression to have KindIdentifier in its trivia"
 		token := astnav.GetTouchingPropertyName(file, position)
-		if token == nil {
-			t.Fatal("Expected to get a token, got nil")
-		}
-
-		// The function may return either the identifier itself or the containing
+		require.NotNil(t, token)
+		assert.False(t,// The function may return either the identifier itself or the containing
 		// parenthesized expression, depending on how the AST is structured
-		if token.Kind != ast.KindIdentifier && token.Kind != ast.KindParenthesizedExpression {
-			t.Errorf("Expected identifier or parenthesized expression, got %s", token.Kind)
-		}
+		token.Kind != ast.KindIdentifier && token.Kind != ast.KindParenthesizedExpression)
+
 	})
 
 	t.Run("JSDoc type assertion with comment", func(t *testing.T) {

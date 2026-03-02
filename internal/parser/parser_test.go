@@ -17,6 +17,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
 	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func BenchmarkParse(b *testing.B) {
@@ -195,14 +196,12 @@ test("", async function () {
 
 	for i := 1; i < len(file.ReparsedClones); i++ {
 		a, b := file.ReparsedClones[i-1], file.ReparsedClones[i]
-		if a.Pos() == b.Pos() && a.End() == b.End() && a.Kind == b.Kind {
-			t.Errorf("duplicate ReparsedClones at [%d] and [%d]: %s pos=%d end=%d", i-1, i, a.Kind.String(), a.Pos(), a.End())
-		}
+		assert.False(t, a.Pos() == b.Pos() && a.End() == b.End() && a.Kind == b.Kind)
+
 	}
 	for _, imp := range file.Imports() {
 		reparsed := ast.GetReparsedNodeForNode(imp)
-		if ast.GetSourceFileOfNode(reparsed) == nil {
-			t.Errorf("reparsed import at pos=%d has broken parent chain", imp.Pos())
-		}
+		assert.NotNil(t, ast.GetSourceFileOfNode(reparsed))
+
 	}
 }

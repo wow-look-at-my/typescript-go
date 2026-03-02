@@ -16,7 +16,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/baseline"
 	"github.com/microsoft/typescript-go/internal/testutil/harnessutil"
 	"github.com/microsoft/typescript-go/internal/tspath"
-	"github.com/wow-look-at-my/testify/require"
+
 	"github.com/wow-look-at-my/testify/assert"
 )
 
