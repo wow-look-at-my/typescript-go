@@ -16,7 +16,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/repo"
 	"github.com/microsoft/typescript-go/internal/testutil/baseline"
 	"github.com/microsoft/typescript-go/internal/testutil/jstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 var testFiles = []string{
@@ -33,7 +33,7 @@ func TestGetTokenAtPosition(t *testing.T) {
 		baselineTokens(
 			t,
 			"GetTokenAtPosition",
-			false, /*includeEOF*/
+			false,	/*includeEOF*/
 			func(fileText string, positions []int) []*tokenInfo {
 				return tsGetTokensAtPositions(t, fileText, positions)
 			},
@@ -49,8 +49,8 @@ func TestGetTokenAtPosition(t *testing.T) {
     const s = /**@type {string}*/(x)
 }`
 		file := parser.ParseSourceFile(ast.SourceFileParseOptions{
-			FileName: "/test.js",
-			Path:     "/test.js",
+			FileName:	"/test.js",
+			Path:		"/test.js",
 		}, fileText, core.ScriptKindJS)
 
 		// Position of 'x' inside the parenthesized expression (position 52)
@@ -77,16 +77,16 @@ func TestGetTokenAtPosition(t *testing.T) {
     const s = /**@type {string}*/(x)  // Go-to-definition on x causes panic
 }`
 		file := parser.ParseSourceFile(ast.SourceFileParseOptions{
-			FileName: "/test.js",
-			Path:     "/test.js",
+			FileName:	"/test.js",
+			Path:		"/test.js",
 		}, fileText, core.ScriptKindJS)
 
 		// Find position of 'x' in the type assertion
-		xPos := 52 // Position of 'x' in (x)
+		xPos := 52	// Position of 'x' in (x)
 
 		// This should not panic
 		token := astnav.GetTouchingPropertyName(file, xPos)
-		assert.Assert(t, token != nil, "Expected to get a token")
+		require.True(t, token != nil, "Expected to get a token")
 	})
 
 	t.Run("pointer equality", func(t *testing.T) {
@@ -97,10 +97,10 @@ func TestGetTokenAtPosition(t *testing.T) {
 			}
 		`
 		file := parser.ParseSourceFile(ast.SourceFileParseOptions{
-			FileName: "/file.ts",
-			Path:     "/file.ts",
+			FileName:	"/file.ts",
+			Path:		"/file.ts",
 		}, fileText, core.ScriptKindTS)
-		assert.Equal(t, astnav.GetTokenAtPosition(file, 0), astnav.GetTokenAtPosition(file, 0))
+		require.Equal(t, astnav.GetTokenAtPosition(file, 0), astnav.GetTokenAtPosition(file, 0))
 	})
 }
 
@@ -112,7 +112,7 @@ func TestGetTouchingPropertyName(t *testing.T) {
 	baselineTokens(
 		t,
 		"GetTouchingPropertyName",
-		false, /*includeEOF*/
+		false,	/*includeEOF*/
 		func(fileText string, positions []int) []*tokenInfo {
 			return tsGetTouchingPropertyName(t, fileText, positions)
 		},
@@ -127,7 +127,7 @@ func baselineTokens(t *testing.T, testName string, includeEOF bool, getTSTokens 
 		t.Run(filepath.Base(fileName), func(t *testing.T) {
 			t.Parallel()
 			fileText, err := os.ReadFile(fileName)
-			assert.NilError(t, err)
+			require.NoError(t, err)
 
 			positions := make([]int, len(fileText)+core.IfElse(includeEOF, 1, 0))
 			for i := range positions {
@@ -135,8 +135,8 @@ func baselineTokens(t *testing.T, testName string, includeEOF bool, getTSTokens 
 			}
 			tsTokens := getTSTokens(string(fileText), positions)
 			file := parser.ParseSourceFile(ast.SourceFileParseOptions{
-				FileName: "/file.ts",
-				Path:     "/file.ts",
+				FileName:	"/file.ts",
+				Path:		"/file.ts",
 			}, string(fileText), core.ScriptKindTS)
 
 			var output strings.Builder
@@ -174,14 +174,14 @@ func baselineTokens(t *testing.T, testName string, includeEOF bool, getTSTokens 
 }
 
 type tokenDiff struct {
-	goToken *tokenInfo
-	tsToken *tokenInfo
+	goToken	*tokenInfo
+	tsToken	*tokenInfo
 }
 
 type tokenInfo struct {
-	Kind string `json:"kind"`
-	Pos  int    `json:"pos"`
-	End  int    `json:"end"`
+	Kind	string	`json:"kind"`
+	Pos	int	`json:"pos"`
+	End	int	`json:"end"`
 }
 
 func toTokenInfo(node *ast.Node) *tokenInfo {
@@ -194,9 +194,9 @@ func toTokenInfo(node *ast.Node) *tokenInfo {
 		kind = "EndOfFileToken"
 	}
 	return &tokenInfo{
-		Kind: kind,
-		Pos:  node.Pos(),
-		End:  node.End(),
+		Kind:	kind,
+		Pos:	node.Pos(),
+		End:	node.End(),
 	}
 }
 
@@ -214,10 +214,10 @@ func tokensEqual(t1, t2 *tokenInfo) bool {
 func tsGetTokensAtPositions(t testing.TB, fileText string, positions []int) []*tokenInfo {
 	dir := t.TempDir()
 	err := os.WriteFile(filepath.Join(dir, "file.ts"), []byte(fileText), 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	err = os.WriteFile(filepath.Join(dir, "positions.json"), []byte(core.Must(core.StringifyJson(positions, "", ""))), 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	script := `
 		import fs from "fs";
@@ -244,17 +244,17 @@ func tsGetTokensAtPositions(t testing.TB, fileText string, positions []int) []*t
 		};`
 
 	info, err := jstest.EvalNodeScriptWithTS[[]*tokenInfo](t, script, dir, "")
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	return info
 }
 
 func tsGetTouchingPropertyName(t testing.TB, fileText string, positions []int) []*tokenInfo {
 	dir := t.TempDir()
 	err := os.WriteFile(filepath.Join(dir, "file.ts"), []byte(fileText), 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	err = os.WriteFile(filepath.Join(dir, "positions.json"), []byte(core.Must(core.StringifyJson(positions, "", ""))), 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	script := `
 		import fs from "fs";
@@ -281,7 +281,7 @@ func tsGetTouchingPropertyName(t testing.TB, fileText string, positions []int) [
 		};`
 
 	info, err := jstest.EvalNodeScriptWithTS[[]*tokenInfo](t, script, dir, "")
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	return info
 }
 
@@ -390,7 +390,7 @@ func TestFindPrecedingToken(t *testing.T) {
 		baselineTokens(
 			t,
 			"FindPrecedingToken",
-			true, /*includeEOF*/
+			true,	/*includeEOF*/
 			func(fileText string, positions []int) []*tokenInfo {
 				return tsFindPrecedingTokens(t, fileText, positions)
 			},
@@ -404,13 +404,13 @@ func TestFindPrecedingToken(t *testing.T) {
 func TestUnitFindPrecedingToken(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
-		name         string
-		fileContent  string
-		position     int
-		expectedKind ast.Kind
+		name		string
+		fileContent	string
+		position	int
+		expectedKind	ast.Kind
 	}{
 		{
-			name: "after dot in jsdoc",
+			name:	"after dot in jsdoc",
 			fileContent: `import {
     CharacterCodes,
     compareStringsCaseInsensitive,
@@ -457,25 +457,25 @@ backslashRegExp.
 export function isAnyDirectorySeparator(charCode: number): boolean {
     return charCode === CharacterCodes.slash || charCode === CharacterCodes.backslash;
 }`,
-			position:     839,
-			expectedKind: ast.KindDotToken,
+			position:	839,
+			expectedKind:	ast.KindDotToken,
 		},
 		{
-			name:         "after comma in parameter list",
-			fileContent:  `takesCb((n, s, ))`,
-			position:     15,
-			expectedKind: ast.KindCommaToken,
+			name:		"after comma in parameter list",
+			fileContent:	`takesCb((n, s, ))`,
+			position:	15,
+			expectedKind:	ast.KindCommaToken,
 		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			file := parser.ParseSourceFile(ast.SourceFileParseOptions{
-				FileName: "/file.ts",
-				Path:     "/file.ts",
+				FileName:	"/file.ts",
+				Path:		"/file.ts",
 			}, testCase.fileContent, core.ScriptKindTS)
 			token := astnav.FindPrecedingToken(file, testCase.position)
-			assert.Equal(t, token.Kind, testCase.expectedKind)
+			require.Equal(t, token.Kind, testCase.expectedKind)
 		})
 	}
 }
@@ -483,10 +483,10 @@ export function isAnyDirectorySeparator(charCode: number): boolean {
 func tsFindPrecedingTokens(t *testing.T, fileText string, positions []int) []*tokenInfo {
 	dir := t.TempDir()
 	err := os.WriteFile(filepath.Join(dir, "file.ts"), []byte(fileText), 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	err = os.WriteFile(filepath.Join(dir, "positions.json"), []byte(core.Must(core.StringifyJson(positions, "", ""))), 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	script := `
 		import fs from "fs";
@@ -515,6 +515,6 @@ func tsFindPrecedingTokens(t *testing.T, fileText string, positions []int) []*to
 			});
 		};`
 	info, err := jstest.EvalNodeScriptWithTS[[]*tokenInfo](t, script, dir, "")
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	return info
 }

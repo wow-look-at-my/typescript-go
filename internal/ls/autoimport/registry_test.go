@@ -16,7 +16,8 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/projecttestutil"
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestRegistryLifecycle(t *testing.T) {
@@ -32,21 +33,21 @@ func TestRegistryLifecycle(t *testing.T) {
 		stats := autoImportStats(t, session)
 		projectBucket := singleBucket(t, stats.ProjectBuckets)
 		nodeModulesBucket := singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, true, projectBucket.State.Dirty())
-		assert.Equal(t, 0, projectBucket.FileCount)
-		assert.Equal(t, true, nodeModulesBucket.State.Dirty())
-		assert.Equal(t, 0, nodeModulesBucket.FileCount)
+		require.Equal(t, true, projectBucket.State.Dirty())
+		require.Equal(t, 0, projectBucket.FileCount)
+		require.Equal(t, true, nodeModulesBucket.State.Dirty())
+		require.Equal(t, 0, nodeModulesBucket.FileCount)
 
 		_, err := session.GetLanguageServiceWithAutoImports(context.Background(), mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		stats = autoImportStats(t, session)
 		projectBucket = singleBucket(t, stats.ProjectBuckets)
 		nodeModulesBucket = singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, false, projectBucket.State.Dirty())
-		assert.Assert(t, projectBucket.ExportCount > 0)
-		assert.Equal(t, false, nodeModulesBucket.State.Dirty())
-		assert.Assert(t, nodeModulesBucket.ExportCount > 0)
+		require.Equal(t, false, projectBucket.State.Dirty())
+		require.True(t, projectBucket.ExportCount > 0)
+		require.Equal(t, false, nodeModulesBucket.State.Dirty())
+		require.True(t, nodeModulesBucket.ExportCount > 0)
 	})
 
 	t.Run("bucket does not rebuild on same-file change", func(t *testing.T) {
@@ -60,7 +61,7 @@ func TestRegistryLifecycle(t *testing.T) {
 		session.DidOpenFile(context.Background(), mainFile.URI(), 1, mainFile.Content(), lsproto.LanguageKindTypeScript)
 		session.DidOpenFile(context.Background(), secondaryFile.URI(), 1, secondaryFile.Content(), lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(context.Background(), mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		updatedContent := mainFile.Content() + "// change\n"
 		session.DidChangeFile(context.Background(), mainFile.URI(), 2, []lsproto.TextDocumentContentChangePartialOrWholeDocument{
@@ -68,33 +69,33 @@ func TestRegistryLifecycle(t *testing.T) {
 		})
 
 		_, err = session.GetLanguageService(context.Background(), mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		stats := autoImportStats(t, session)
 		projectBucket := singleBucket(t, stats.ProjectBuckets)
 		nodeModulesBucket := singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, projectBucket.State.Dirty(), true)
-		assert.Equal(t, projectBucket.State.DirtyFile(), utils.ToPath(mainFile.FileName()))
-		assert.Equal(t, nodeModulesBucket.State.Dirty(), false)
-		assert.Equal(t, nodeModulesBucket.State.DirtyFile(), tspath.Path(""))
+		require.Equal(t, projectBucket.State.Dirty(), true)
+		require.Equal(t, projectBucket.State.DirtyFile(), utils.ToPath(mainFile.FileName()))
+		require.Equal(t, nodeModulesBucket.State.Dirty(), false)
+		require.Equal(t, nodeModulesBucket.State.DirtyFile(), tspath.Path(""))
 
 		// Bucket should not recompute when requesting same file changed
 		_, err = session.GetLanguageServiceWithAutoImports(context.Background(), mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
 		projectBucket = singleBucket(t, stats.ProjectBuckets)
-		assert.Equal(t, projectBucket.State.Dirty(), true)
-		assert.Equal(t, projectBucket.State.DirtyFile(), utils.ToPath(mainFile.FileName()))
+		require.Equal(t, projectBucket.State.Dirty(), true)
+		require.Equal(t, projectBucket.State.DirtyFile(), utils.ToPath(mainFile.FileName()))
 
 		// Bucket should recompute when other file has changed
 		session.DidChangeFile(context.Background(), secondaryFile.URI(), 1, []lsproto.TextDocumentContentChangePartialOrWholeDocument{
 			{WholeDocument: &lsproto.TextDocumentContentChangeWholeDocument{Text: "// new content"}},
 		})
 		_, err = session.GetLanguageServiceWithAutoImports(context.Background(), mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
 		projectBucket = singleBucket(t, stats.ProjectBuckets)
-		assert.Equal(t, projectBucket.State.Dirty(), false)
+		require.Equal(t, projectBucket.State.Dirty(), false)
 	})
 
 	t.Run("bucket updates on same-file change when new files added to the program", func(t *testing.T) {
@@ -109,7 +110,7 @@ func TestRegistryLifecycle(t *testing.T) {
 				},
 				"files": ["index.ts"]
 			}`,
-			projectRoot + "/index.ts": "",
+			projectRoot + "/index.ts":	"",
 			projectRoot + "/utils.ts": `export const foo = 1;
 export const bar = 2;`,
 		}
@@ -122,10 +123,10 @@ export const bar = 2;`,
 		// Open the index.ts file
 		session.DidOpenFile(ctx, indexURI, 1, "", lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, indexURI)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats := autoImportStats(t, session)
 		projectBucket := singleBucket(t, stats.ProjectBuckets)
-		assert.Equal(t, 1, projectBucket.FileCount)
+		require.Equal(t, 1, projectBucket.FileCount)
 
 		// Edit index.ts to import foo from utils.ts
 		newContent := `import { foo } from "./utils";`
@@ -135,10 +136,10 @@ export const bar = 2;`,
 
 		// Bucket should be rebuilt because new files were added
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, indexURI)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
 		projectBucket = singleBucket(t, stats.ProjectBuckets)
-		assert.Equal(t, 2, projectBucket.FileCount)
+		require.Equal(t, 2, projectBucket.FileCount)
 	})
 
 	t.Run("package.json dependency changes invalidate node_modules buckets", func(t *testing.T) {
@@ -154,14 +155,14 @@ export const bar = 2;`,
 
 		session.DidOpenFile(ctx, mainFile.URI(), 1, mainFile.Content(), lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats := autoImportStats(t, session)
 		nodeModulesBucket := singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, nodeModulesBucket.State.Dirty(), false)
+		require.Equal(t, nodeModulesBucket.State.Dirty(), false)
 
 		fs := sessionUtils.FS()
 		updatePackageJSON := func(content string) {
-			assert.NilError(t, fs.WriteFile(packageJSON.FileName(), content, false))
+			require.NoError(t, fs.WriteFile(packageJSON.FileName(), content, false))
 			session.DidChangeWatchedFiles(ctx, []*lsproto.FileEvent{
 				{Type: lsproto.FileChangeTypeChanged, Uri: packageJSON.URI()},
 			})
@@ -170,26 +171,26 @@ export const bar = 2;`,
 		sameDepsContent := fmt.Sprintf("{\n  \"name\": \"local-project-stable\",\n  \"dependencies\": {\n    \"%s\": \"*\"\n  }\n}\n", nodePackage.Name)
 		updatePackageJSON(sameDepsContent)
 		_, err = session.GetLanguageService(ctx, mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
 		nodeModulesBucket = singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, nodeModulesBucket.State.Dirty(), false)
+		require.Equal(t, nodeModulesBucket.State.Dirty(), false)
 
 		differentDepsContent := fmt.Sprintf("{\n  \"name\": \"local-project-stable\",\n  \"dependencies\": {\n    \"%s\": \"*\",\n    \"newpkg\": \"*\"\n  }\n}\n", nodePackage.Name)
 		updatePackageJSON(differentDepsContent)
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
-		assert.Check(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Has("newpkg"))
+		assert.True(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Has("newpkg"))
 	})
 
 	t.Run("node_modules buckets get deleted when no open files can reference them", func(t *testing.T) {
 		t.Parallel()
 		fixture := autoimporttestutil.SetupMonorepoLifecycleSession(t, autoimporttestutil.MonorepoSetupConfig{
-			Root: monorepoProjectRoot,
+			Root:	monorepoProjectRoot,
 			MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{
-				Name:            "monorepo",
-				NodeModuleNames: []string{"pkg-root"},
+				Name:			"monorepo",
+				NodeModuleNames:	[]string{"pkg-root"},
 			},
 			Packages: []autoimporttestutil.MonorepoPackageConfig{
 				{FileCount: 1, MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{Name: "package-a", NodeModuleNames: []string{"pkg-a"}}},
@@ -207,23 +208,23 @@ export const bar = 2;`,
 		// Open file in package-a, should create buckets for root and package-a node_modules
 		session.DidOpenFile(ctx, fileA.URI(), 1, fileA.Content(), lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, fileA.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Open file in package-b, should also create buckets for package-b
 		session.DidOpenFile(ctx, fileB.URI(), 1, fileB.Content(), lsproto.LanguageKindTypeScript)
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, fileB.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats := autoImportStats(t, session)
-		assert.Equal(t, len(stats.NodeModulesBuckets), 3)
-		assert.Equal(t, len(stats.ProjectBuckets), 2)
+		require.Equal(t, len(stats.NodeModulesBuckets), 3)
+		require.Equal(t, len(stats.ProjectBuckets), 2)
 
 		// Close file in package-a, package-a's node_modules bucket and project bucket should be removed
 		session.DidCloseFile(ctx, fileA.URI())
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, fileB.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
-		assert.Equal(t, len(stats.NodeModulesBuckets), 2)
-		assert.Equal(t, len(stats.ProjectBuckets), 1)
+		require.Equal(t, len(stats.NodeModulesBuckets), 2)
+		require.Equal(t, len(stats.ProjectBuckets), 1)
 	})
 
 	t.Run("node_modules bucket dependency selection changes with open files", func(t *testing.T) {
@@ -234,18 +235,18 @@ export const bar = 2;`,
 		packageAIndex := tspath.CombinePaths(packageADir, "index.js")
 
 		fixture := autoimporttestutil.SetupMonorepoLifecycleSession(t, autoimporttestutil.MonorepoSetupConfig{
-			Root: monorepoRoot,
+			Root:	monorepoRoot,
 			MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{
-				Name:            "monorepo",
-				NodeModuleNames: []string{"pkg1", "pkg2", "pkg3"},
-				DependencyNames: []string{"pkg1"},
+				Name:			"monorepo",
+				NodeModuleNames:	[]string{"pkg1", "pkg2", "pkg3"},
+				DependencyNames:	[]string{"pkg1"},
 			},
 			Packages: []autoimporttestutil.MonorepoPackageConfig{
 				{
-					FileCount: 0,
+					FileCount:	0,
 					MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{
-						Name:            "a",
-						DependencyNames: []string{"pkg1", "pkg2"},
+						Name:			"a",
+						DependencyNames:	[]string{"pkg1", "pkg2"},
 					},
 				},
 			},
@@ -263,31 +264,31 @@ export const bar = 2;`,
 		// Open monorepo root file: expect dependencies restricted to pkg1
 		session.DidOpenFile(ctx, monorepoHandle.URI(), 1, monorepoHandle.Content(), lsproto.LanguageKindJavaScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, monorepoHandle.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats := autoImportStats(t, session)
-		assert.Assert(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Equals(collections.NewSetFromItems("pkg1")))
+		require.True(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Equals(collections.NewSetFromItems("pkg1")))
 
 		// Open package-a file: pkg2 should be added to existing bucket
 		session.DidOpenFile(ctx, packageAHandle.URI(), 1, packageAHandle.Content(), lsproto.LanguageKindJavaScript)
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, packageAHandle.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
-		assert.Assert(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Equals(collections.NewSetFromItems("pkg1", "pkg2")))
+		require.True(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Equals(collections.NewSetFromItems("pkg1", "pkg2")))
 
 		// Close package-a file; only monorepo bucket should remain
 		session.DidCloseFile(ctx, packageAHandle.URI())
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, monorepoHandle.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
-		assert.Assert(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Equals(collections.NewSetFromItems("pkg1")))
+		require.True(t, singleBucket(t, stats.NodeModulesBuckets).DependencyNames.Equals(collections.NewSetFromItems("pkg1")))
 
 		// Close monorepo file; no node_modules buckets should remain
 		session.DidCloseFile(ctx, monorepoHandle.URI())
 		session.DidOpenFile(ctx, "untitled:Untitled-1", 0, "", lsproto.LanguageKindTypeScript)
 		_, err = session.GetLanguageService(ctx, "untitled:Untitled-1")
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
-		assert.Equal(t, len(stats.NodeModulesBuckets), 0)
+		require.Equal(t, len(stats.NodeModulesBuckets), 0)
 	})
 
 	t.Run("node_modules bucket includes resolved packages from all projects", func(t *testing.T) {
@@ -309,29 +310,29 @@ export const bar = 2;`,
 		packageBIndex := tspath.CombinePaths(packageBDir, "index.ts")
 
 		fixture := autoimporttestutil.SetupMonorepoLifecycleSession(t, autoimporttestutil.MonorepoSetupConfig{
-			Root: monorepoRoot,
+			Root:	monorepoRoot,
 			MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{
-				Name: "monorepo",
+				Name:	"monorepo",
 				// Both pkg-listed and pkg-unlisted exist in node_modules
-				NodeModuleNames: []string{"pkg-listed", "pkg-unlisted"},
+				NodeModuleNames:	[]string{"pkg-listed", "pkg-unlisted"},
 				// But only pkg-listed is in the root package.json dependencies
-				DependencyNames: []string{"pkg-listed"},
+				DependencyNames:	[]string{"pkg-listed"},
 			},
 			Packages: []autoimporttestutil.MonorepoPackageConfig{
 				{
-					FileCount: 0,
+					FileCount:	0,
 					MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{
-						Name: "a",
+						Name:	"a",
 						// package-a only lists pkg-listed in its package.json
-						DependencyNames: []string{"pkg-listed"},
+						DependencyNames:	[]string{"pkg-listed"},
 					},
 				},
 				{
-					FileCount: 0,
+					FileCount:	0,
 					MonorepoPackageTemplate: autoimporttestutil.MonorepoPackageTemplate{
-						Name: "b",
+						Name:	"b",
 						// package-b also only lists pkg-listed in its package.json
-						DependencyNames: []string{"pkg-listed"},
+						DependencyNames:	[]string{"pkg-listed"},
 					},
 				},
 			},
@@ -351,13 +352,13 @@ export const bar = 2;`,
 		// Open file in project-a (which imports pkg-unlisted)
 		session.DidOpenFile(ctx, packageAHandle.URI(), 1, packageAHandle.Content(), lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, packageAHandle.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Open file in project-b (which does not import pkg-unlisted)
 		session.DidOpenFile(ctx, packageBHandle.URI(), 1, packageBHandle.Content(), lsproto.LanguageKindTypeScript)
 		// Request auto-imports for project-b
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, packageBHandle.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Verify that the node_modules bucket includes pkg-unlisted
 		// even though we requested auto-imports for project-b which doesn't list it.
@@ -365,8 +366,8 @@ export const bar = 2;`,
 		// resolved packages from all projects that share the node_modules directory.
 		stats := autoImportStats(t, session)
 		nodeModulesBucket := singleBucket(t, stats.NodeModulesBuckets)
-		assert.Assert(t, nodeModulesBucket.DependencyNames.Has("pkg-listed"), "pkg-listed should be in dependencies")
-		assert.Assert(t, nodeModulesBucket.DependencyNames.Has("pkg-unlisted"), "pkg-unlisted should be in dependencies because project-a imports it")
+		require.True(t, nodeModulesBucket.DependencyNames.Has("pkg-listed"), "pkg-listed should be in dependencies")
+		require.True(t, nodeModulesBucket.DependencyNames.Has("pkg-unlisted"), "pkg-unlisted should be in dependencies because project-a imports it")
 	})
 
 	t.Run("symlinked monorepo invalidates on source file change", func(t *testing.T) {
@@ -441,7 +442,7 @@ export declare const otherValue: string;`,
 			projectAIndex: `console.log("hello");
 `,
 			// Symlink: project-b is accessible via node_modules
-			tspath.CombinePaths(projectADir, "node_modules", "project-b"): vfstest.Symlink(projectBDir),
+			tspath.CombinePaths(projectADir, "node_modules", "project-b"):	vfstest.Symlink(projectBDir),
 		}
 
 		session, _ := projecttestutil.Setup(files)
@@ -453,14 +454,14 @@ export declare const otherValue: string;`,
 		projectAContent := files[projectAIndex].(string)
 		session.DidOpenFile(ctx, projectAURI, 1, projectAContent, lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, projectAURI)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Verify initial state: bucket is clean with files
 		stats := autoImportStats(t, session)
 		nodeModulesBucket := singleBucket(t, stats.NodeModulesBuckets)
 		initialFileCount := nodeModulesBucket.FileCount
-		assert.Equal(t, nodeModulesBucket.State.Dirty(), false, "bucket should be clean initially")
-		assert.Assert(t, initialFileCount > 0, "bucket should have files initially")
+		require.Equal(t, nodeModulesBucket.State.Dirty(), false, "bucket should be clean initially")
+		require.True(t, initialFileCount > 0, "bucket should have files initially")
 
 		// Open project-b's source file
 		projectBURI := lsconv.FileNameToDocumentURI(projectBSrcIndex)
@@ -475,29 +476,29 @@ export declare const otherValue: string;`,
 
 		// Check that the node_modules bucket is now dirty
 		_, err = session.GetLanguageService(ctx, projectAURI)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		stats = autoImportStats(t, session)
 		nodeModulesBucket = singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, nodeModulesBucket.State.Dirty(), true, "bucket should be dirty after source file change")
+		require.Equal(t, nodeModulesBucket.State.Dirty(), true, "bucket should be dirty after source file change")
 
 		// Verify that only project-b is marked for update, not other-pkg.
 		// This tests that we correctly track which packages need granular updates.
 		dirtyPackages := nodeModulesBucket.State.DirtyPackages()
-		assert.Assert(t, dirtyPackages != nil, "dirty packages should be tracked")
-		assert.Assert(t, dirtyPackages.Has("project-b"), "project-b should be in dirty packages")
-		assert.Assert(t, !dirtyPackages.Has("other-pkg"), "other-pkg should NOT be in dirty packages")
-		assert.Equal(t, dirtyPackages.Len(), 1, "only one package should be dirty")
+		require.True(t, dirtyPackages != nil, "dirty packages should be tracked")
+		require.True(t, dirtyPackages.Has("project-b"), "project-b should be in dirty packages")
+		require.True(t, !dirtyPackages.Has("other-pkg"), "other-pkg should NOT be in dirty packages")
+		require.Equal(t, dirtyPackages.Len(), 1, "only one package should be dirty")
 
 		// Rebuild by requesting auto-imports again.
 		// NOTE: Currently the entire bucket is rebuilt, not just the dirty packages.
 		// The dirtyPackages tracking is in place for future granular update implementation.
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, projectAURI)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Verify bucket is clean again after rebuild
 		stats = autoImportStats(t, session)
 		nodeModulesBucket = singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, nodeModulesBucket.State.Dirty(), false, "bucket should be clean after rebuild")
+		require.Equal(t, nodeModulesBucket.State.Dirty(), false, "bucket should be clean after rebuild")
 	})
 
 	t.Run("changed fileExcludePatterns triggers bucket rebuild", func(t *testing.T) {
@@ -512,26 +513,26 @@ export declare const otherValue: string;`,
 		// Open file and build auto-imports initially
 		session.DidOpenFile(ctx, mainFile.URI(), 1, mainFile.Content(), lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageServiceWithAutoImports(ctx, mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Verify buckets are clean after initial build
 		stats := autoImportStats(t, session)
 		projectBucket := singleBucket(t, stats.ProjectBuckets)
 		nodeModulesBucket := singleBucket(t, stats.NodeModulesBuckets)
-		assert.Equal(t, false, projectBucket.State.Dirty())
-		assert.Equal(t, false, nodeModulesBucket.State.Dirty())
+		require.Equal(t, false, projectBucket.State.Dirty())
+		require.Equal(t, false, nodeModulesBucket.State.Dirty())
 
 		// IsPreparedForImportingFile should return true with no exclude patterns
 		snapshot, release := session.Snapshot()
 		defaultProject := snapshot.GetDefaultProject(mainFile.URI())
-		assert.Assert(t, defaultProject != nil)
+		require.True(t, defaultProject != nil)
 		projectPath := defaultProject.ConfigFilePath()
 		preferences := lsutil.NewDefaultUserPreferences()
 		preferences.IncludeCompletionsForModuleExports = core.TSTrue
 		preferences.IncludeCompletionsForImportStatements = core.TSTrue
 		isPrepared := snapshot.AutoImportRegistry().IsPreparedForImportingFile(mainFile.FileName(), projectPath, preferences)
 		release()
-		assert.Assert(t, isPrepared)
+		require.True(t, isPrepared)
 
 		// Change the file exclude patterns preference
 		newPreferences := lsutil.NewDefaultUserPreferences()
@@ -544,23 +545,23 @@ export declare const otherValue: string;`,
 		snapshot2, release2 := session.Snapshot()
 		isPrepared2 := snapshot2.AutoImportRegistry().IsPreparedForImportingFile(mainFile.FileName(), projectPath, newPreferences)
 		release2()
-		assert.Assert(t, !isPrepared2)
+		require.True(t, !isPrepared2)
 
 		// After GetLanguageServiceWithAutoImports, buckets should be rebuilt
 		_, err = session.GetLanguageServiceWithAutoImports(ctx, mainFile.URI())
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// IsPreparedForImportingFile should return true now that buckets are rebuilt
 		snapshot3, release3 := session.Snapshot()
 		isPrepared3 := snapshot3.AutoImportRegistry().IsPreparedForImportingFile(mainFile.FileName(), projectPath, newPreferences)
 		release3()
-		assert.Assert(t, isPrepared3, "IsPreparedForImportingFile should return true after bucket rebuild with new fileExcludePatterns")
+		require.True(t, isPrepared3, "IsPreparedForImportingFile should return true after bucket rebuild with new fileExcludePatterns")
 	})
 }
 
 const (
-	lifecycleProjectRoot = "/home/src/autoimport-lifecycle"
-	monorepoProjectRoot  = "/home/src/autoimport-monorepo"
+	lifecycleProjectRoot	= "/home/src/autoimport-lifecycle"
+	monorepoProjectRoot	= "/home/src/autoimport-monorepo"
 )
 
 func autoImportStats(t *testing.T, session *project.Session) *autoimport.CacheStats {

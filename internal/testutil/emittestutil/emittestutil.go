@@ -8,7 +8,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/printer"
 	"github.com/microsoft/typescript-go/internal/testutil/parsetestutil"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 // Checks that pretty-printing the given file matches the expected output.
@@ -23,7 +23,7 @@ func CheckEmit(t *testing.T, emitContext *printer.EmitContext, file *ast.SourceF
 	)
 	text := printer.EmitSourceFile(file)
 	actual := strings.TrimSuffix(text, "\n")
-	assert.Equal(t, expected, actual)
+	require.Equal(t, expected, actual)
 	file2 := parsetestutil.ParseTypeScript(text, file.LanguageVariant == core.LanguageVariantJSX)
 	parsetestutil.CheckDiagnosticsMessage(t, file2, "error on reparse: ")
 }

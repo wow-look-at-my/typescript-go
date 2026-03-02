@@ -3,14 +3,14 @@ package semver
 import (
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestTryParseSemver(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		in  string
-		out Version
+		in	string
+		out	Version
 	}{
 		{"1.2.3-pre.4+build.5", Version{major: 1, minor: 2, patch: 3, prerelease: []string{"pre", "4"}, build: []string{"build", "5"}}},
 		{"1.2.3-pre.4", Version{major: 1, minor: 2, patch: 3, prerelease: []string{"pre", "4"}}},
@@ -22,7 +22,7 @@ func TestTryParseSemver(t *testing.T) {
 		t.Run(test.in, func(t *testing.T) {
 			t.Parallel()
 			v, err := TryParseVersion(test.in)
-			assert.NilError(t, err)
+			require.NoError(t, err)
 			assertVersion(t, v, test.out)
 		})
 	}
@@ -31,8 +31,8 @@ func TestTryParseSemver(t *testing.T) {
 func TestVersionString(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		in  Version
-		out string
+		in	Version
+		out	string
 	}{
 		{Version{major: 1, minor: 2, patch: 3, prerelease: []string{"pre", "4"}, build: []string{"build", "5"}}, "1.2.3-pre.4+build.5"},
 		{Version{major: 1, minor: 2, patch: 3, prerelease: []string{"pre", "4"}, build: []string{"build"}}, "1.2.3-pre.4+build"},
@@ -45,7 +45,7 @@ func TestVersionString(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.out, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, test.in.String(), test.out)
+			require.Equal(t, test.in.String(), test.out)
 		})
 	}
 }
@@ -53,8 +53,8 @@ func TestVersionString(t *testing.T) {
 func TestVersionCompare(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		v1, v2 string
-		want   int
+		v1, v2	string
+		want	int
 	}{
 		// https://semver.org/#spec-item-11
 		// > Precedence is determined by the first difference when comparing each of these
@@ -130,18 +130,18 @@ func TestVersionCompare(t *testing.T) {
 		t.Run(test.v1+" <=> "+test.v2, func(t *testing.T) {
 			t.Parallel()
 			v1, err1 := TryParseVersion(test.v1)
-			assert.NilError(t, err1, test.v1)
+			require.NoError(t, err1, test.v1)
 			v2, err2 := TryParseVersion(test.v2)
-			assert.NilError(t, err2, test.v2)
-			assert.Equal(t, v1.Compare(&v2), test.want)
+			require.NoError(t, err2, test.v2)
+			require.Equal(t, v1.Compare(&v2), test.want)
 		})
 	}
 }
 
 func assertVersion(t *testing.T, a, b Version) {
-	assert.Equal(t, a.major, b.major)
-	assert.Equal(t, a.minor, b.minor)
-	assert.Equal(t, a.patch, b.patch)
-	assert.DeepEqual(t, a.prerelease, b.prerelease)
-	assert.DeepEqual(t, a.build, b.build)
+	require.Equal(t, a.major, b.major)
+	require.Equal(t, a.minor, b.minor)
+	require.Equal(t, a.patch, b.patch)
+	require.Equal(t, a.prerelease, b.prerelease)
+	require.Equal(t, a.build, b.build)
 }

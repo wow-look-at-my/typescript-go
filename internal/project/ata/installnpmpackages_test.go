@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestInstallNpmPackages(t *testing.T) {
@@ -505,8 +505,8 @@ func TestInstallNpmPackages(t *testing.T) {
 			calledCount.Add(1)
 			return nil
 		})
-		assert.NilError(t, err)
-		assert.Equal(t, int(calledCount.Load()), 2)
+		require.NoError(t, err)
+		require.Equal(t, int(calledCount.Load()), 2)
 	})
 
 	t.Run("installs remaining packages when one of the partial command fails", func(t *testing.T) {
@@ -517,7 +517,7 @@ func TestInstallNpmPackages(t *testing.T) {
 			calledCount.Add(1)
 			return fmt.Errorf("failed to install packages: %v", packages)
 		})
-		assert.ErrorContains(t, err, "failed to install packages")
-		assert.Equal(t, int(calledCount.Load()), 2)
+		require.ErrorContains(t, err, "failed to install packages")
+		require.Equal(t, int(calledCount.Load()), 2)
 	})
 }

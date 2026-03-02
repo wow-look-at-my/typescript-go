@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestMakeUnitsFromTest(t *testing.T) {
@@ -20,20 +20,20 @@ function bar() { return "b"; }`
 	testUnit1 := &testUnit{
 		content: `function foo() { return "a"; }
 // normal comment`,
-		name: "firstFile.ts",
+		name:	"firstFile.ts",
 	}
 	testUnit2 := &testUnit{
 		content: `// some other comment
 function bar() { return "b"; }`,
-		name: "secondFile.ts",
+		name:	"secondFile.ts",
 	}
 	testContent := testCaseContent{
-		testUnitData:         []*testUnit{testUnit1, testUnit2},
-		tsConfig:             nil,
-		tsConfigFileUnitData: nil,
-		symlinks:             make(map[string]string),
+		testUnitData:		[]*testUnit{testUnit1, testUnit2},
+		tsConfig:		nil,
+		tsConfigFileUnitData:	nil,
+		symlinks:		make(map[string]string),
 	}
-	assert.DeepEqual(
+	require.Equal(
 		t,
 		makeUnitsFromTest(code, "simpleTest.ts"),
 		testContent,

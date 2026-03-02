@@ -6,15 +6,15 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/core"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestEscapeString(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		s         string
-		quoteChar QuoteChar
-		expected  string
+		s		string
+		quoteChar	QuoteChar
+		expected	string
 	}{
 		{s: "", quoteChar: QuoteCharDoubleQuote, expected: ``},
 		{s: "abc", quoteChar: QuoteCharDoubleQuote, expected: `abc`},
@@ -31,7 +31,7 @@ func TestEscapeString(t *testing.T) {
 		t.Run(fmt.Sprintf("[%d] escapeString(%q, %v)", i, rec.s, rec.quoteChar), func(t *testing.T) {
 			t.Parallel()
 			actual := EscapeString(rec.s, rec.quoteChar)
-			assert.Equal(t, actual, rec.expected)
+			require.Equal(t, actual, rec.expected)
 		})
 	}
 }
@@ -39,9 +39,9 @@ func TestEscapeString(t *testing.T) {
 func TestEscapeNonAsciiString(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		s         string
-		quoteChar QuoteChar
-		expected  string
+		s		string
+		quoteChar	QuoteChar
+		expected	string
 	}{
 		{s: "", quoteChar: QuoteCharDoubleQuote, expected: ``},
 		{s: "abc", quoteChar: QuoteCharDoubleQuote, expected: `abc`},
@@ -59,7 +59,7 @@ func TestEscapeNonAsciiString(t *testing.T) {
 		t.Run(fmt.Sprintf("[%d] escapeNonAsciiString(%q, %v)", i, rec.s, rec.quoteChar), func(t *testing.T) {
 			t.Parallel()
 			actual := escapeNonAsciiString(rec.s, rec.quoteChar)
-			assert.Equal(t, actual, rec.expected)
+			require.Equal(t, actual, rec.expected)
 		})
 	}
 }
@@ -67,9 +67,9 @@ func TestEscapeNonAsciiString(t *testing.T) {
 func TestEscapeJsxAttributeString(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		s         string
-		quoteChar QuoteChar
-		expected  string
+		s		string
+		quoteChar	QuoteChar
+		expected	string
 	}{
 		{s: "", quoteChar: QuoteCharDoubleQuote, expected: ""},
 		{s: "abc", quoteChar: QuoteCharDoubleQuote, expected: "abc"},
@@ -86,7 +86,7 @@ func TestEscapeJsxAttributeString(t *testing.T) {
 		t.Run(fmt.Sprintf("[%d] escapeJsxAttributeString(%q, %v)", i, rec.s, rec.quoteChar), func(t *testing.T) {
 			t.Parallel()
 			actual := escapeJsxAttributeString(rec.s, rec.quoteChar)
-			assert.Equal(t, actual, rec.expected)
+			require.Equal(t, actual, rec.expected)
 		})
 	}
 }
@@ -94,9 +94,9 @@ func TestEscapeJsxAttributeString(t *testing.T) {
 func TestIsRecognizedTripleSlashComment(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		s            string
-		commentRange ast.CommentRange
-		expected     bool
+		s		string
+		commentRange	ast.CommentRange
+		expected	bool
 	}{
 		{s: "", commentRange: ast.CommentRange{Kind: ast.KindMultiLineCommentTrivia}, expected: false},
 		{s: "", commentRange: ast.CommentRange{Kind: ast.KindSingleLineCommentTrivia}, expected: false},
@@ -147,7 +147,7 @@ func TestIsRecognizedTripleSlashComment(t *testing.T) {
 				commentRange.TextRange = core.NewTextRange(0, len(rec.s))
 			}
 			actual := IsRecognizedTripleSlashComment(rec.s, commentRange)
-			assert.Equal(t, actual, rec.expected)
+			require.Equal(t, actual, rec.expected)
 		})
 	}
 }

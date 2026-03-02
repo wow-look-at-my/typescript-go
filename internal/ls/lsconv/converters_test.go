@@ -5,15 +5,15 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/ls/lsconv"
 	"github.com/microsoft/typescript-go/internal/lsp/lsproto"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestDocumentURIToFileName(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		uri      lsproto.DocumentUri
-		fileName string
+		uri		lsproto.DocumentUri
+		fileName	string
 	}{
 		{"file:///path/to/file.ts", "/path/to/file.ts"},
 		{"file://server/share/file.ts", "//server/share/file.ts"},
@@ -41,7 +41,7 @@ func TestDocumentURIToFileName(t *testing.T) {
 	for _, test := range tests {
 		t.Run(string(test.uri), func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, test.uri.FileName(), test.fileName)
+			require.Equal(t, test.uri.FileName(), test.fileName)
 		})
 	}
 }
@@ -50,8 +50,8 @@ func TestFileNameToDocumentURI(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		fileName string
-		uri      lsproto.DocumentUri
+		fileName	string
+		uri		lsproto.DocumentUri
 	}{
 		{"/path/to/file.ts", "file:///path/to/file.ts"},
 		{"//server/share/file.ts", "file://server/share/file.ts"},
@@ -77,7 +77,7 @@ func TestFileNameToDocumentURI(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.fileName, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, lsconv.FileNameToDocumentURI(test.fileName), test.uri)
+			require.Equal(t, lsconv.FileNameToDocumentURI(test.fileName), test.uri)
 		})
 	}
 }

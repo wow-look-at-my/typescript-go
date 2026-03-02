@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/project/background"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestQueue(t *testing.T) {
@@ -24,7 +25,7 @@ func TestQueue(t *testing.T) {
 
 		q.Wait()
 
-		assert.Check(t, executed)
+		assert.True(t, executed)
 	})
 
 	t.Run("MultipleTasksExecution", func(t *testing.T) {
@@ -43,7 +44,7 @@ func TestQueue(t *testing.T) {
 
 		q.Wait()
 
-		assert.Equal(t, atomic.LoadInt64(&counter), int64(numTasks))
+		require.Equal(t, atomic.LoadInt64(&counter), int64(numTasks))
 	})
 
 	t.Run("NestedEnqueue", func(t *testing.T) {
@@ -71,7 +72,7 @@ func TestQueue(t *testing.T) {
 		mu.Lock()
 		defer mu.Unlock()
 
-		assert.Equal(t, len(executed), 2)
+		require.Equal(t, len(executed), 2)
 	})
 
 	t.Run("ClosedQueueRejectsNewTasks", func(t *testing.T) {
@@ -86,6 +87,6 @@ func TestQueue(t *testing.T) {
 
 		q.Wait()
 
-		assert.Check(t, !executed, "Task should not execute after queue is closed")
+		assert.True(t, !executed, "Task should not execute after queue is closed")
 	})
 }

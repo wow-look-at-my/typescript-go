@@ -9,7 +9,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/ls/lsconv"
 	"github.com/microsoft/typescript-go/internal/lsp/lsproto"
 	"github.com/microsoft/typescript-go/internal/testutil/projecttestutil"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestUntitledReferences(t *testing.T) {
@@ -38,7 +38,7 @@ x
 x++;`
 
 	// Use the converted filename that DocumentURIToFileName would produce
-	untitledFileName := convertedFileName // "^/untitled/ts-nul-authority/Untitled-2"
+	untitledFileName := convertedFileName	// "^/untitled/ts-nul-authority/Untitled-2"
 	t.Logf("Would use untitled filename: %s", untitledFileName)
 
 	// Set up the file system with an untitled file -
@@ -54,7 +54,7 @@ x++;`
 
 	// Get language service
 	languageService, err := session.GetLanguageService(ctx, "file:///Untitled-2.ts")
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	// Test the filename that the source file reports
 	program := languageService.GetProgram()
@@ -63,16 +63,16 @@ x++;`
 
 	// Call ProvideReferences using the LSP method
 	uri := lsproto.DocumentUri("file:///Untitled-2.ts")
-	lspPosition := lsproto.Position{Line: 2, Character: 0} // Line 3, character 1 (0-indexed)
+	lspPosition := lsproto.Position{Line: 2, Character: 0}	// Line 3, character 1 (0-indexed)
 
 	refParams := &lsproto.ReferenceParams{
-		TextDocument: lsproto.TextDocumentIdentifier{Uri: uri},
-		Position:     lspPosition,
-		Context:      &lsproto.ReferenceContext{IncludeDeclaration: true},
+		TextDocument:	lsproto.TextDocumentIdentifier{Uri: uri},
+		Position:	lspPosition,
+		Context:	&lsproto.ReferenceContext{IncludeDeclaration: true},
 	}
 
 	resp, err := languageService.ProvideReferences(ctx, refParams, nil)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	refs := *resp.Locations
 
@@ -84,11 +84,11 @@ x++;`
 	}
 
 	// We expect to find 3 references
-	assert.Assert(t, len(refs) == 3, "Expected 3 references, got %d", len(refs))
+	require.True(t, len(refs) == 3, "Expected 3 references, got %d", len(refs))
 
 	// Also test definition using ProvideDefinition
 	definition, err := languageService.ProvideDefinition(ctx, uri, lspPosition)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	if definition.Locations != nil {
 		t.Logf("Definition found: %d locations", len(*definition.Locations))
 		for i, loc := range *definition.Locations {
@@ -122,42 +122,42 @@ x++;`
 	defer release()
 
 	// Should have an inferred project
-	assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+	require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 	// Get language service for the untitled file
 	languageService, err := session.GetLanguageService(ctx, "untitled:Untitled-2")
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	program := languageService.GetProgram()
 	untitledFileName := lsproto.DocumentUri("untitled:Untitled-2").FileName()
 	sourceFile := program.GetSourceFile(untitledFileName)
-	assert.Assert(t, sourceFile != nil)
-	assert.Equal(t, sourceFile.Text(), testContent)
+	require.True(t, sourceFile != nil)
+	require.Equal(t, sourceFile.Text(), testContent)
 
 	// Test references on 'x' at position 13 (line 3, after "let x = 42;\n\n")
 	uri := lsproto.DocumentUri("untitled:Untitled-2")
-	lspPosition := lsproto.Position{Line: 2, Character: 0} // Line 3, character 1 (0-indexed)
+	lspPosition := lsproto.Position{Line: 2, Character: 0}	// Line 3, character 1 (0-indexed)
 
 	refParams := &lsproto.ReferenceParams{
-		TextDocument: lsproto.TextDocumentIdentifier{Uri: uri},
-		Position:     lspPosition,
-		Context:      &lsproto.ReferenceContext{IncludeDeclaration: true},
+		TextDocument:	lsproto.TextDocumentIdentifier{Uri: uri},
+		Position:	lspPosition,
+		Context:	&lsproto.ReferenceContext{IncludeDeclaration: true},
 	}
 
 	resp, err := languageService.ProvideReferences(ctx, refParams, nil)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	refs := *resp.Locations
 	t.Logf("Number of references found: %d", len(refs))
 	for i, ref := range refs {
 		t.Logf("Reference %d: URI=%s, Range=%+v", i+1, ref.Uri, ref.Range)
 		// All URIs should be untitled: URIs, not file: URIs
-		assert.Assert(t, strings.HasPrefix(string(ref.Uri), "untitled:"),
+		require.True(t, strings.HasPrefix(string(ref.Uri), "untitled:"),
 			"Expected untitled: URI, got %s", ref.Uri)
 	}
 
 	// We expect to find 4 references
-	assert.Assert(t, len(refs) == 4, "Expected 4 references, got %d", len(refs))
+	require.True(t, len(refs) == 4, "Expected 4 references, got %d", len(refs))
 }
 
 func TestImportsInUntitled(t *testing.T) {
@@ -180,5 +180,5 @@ func TestImportsInUntitled(t *testing.T) {
 	// 2) Wait for ATA/background tasks to finish, then get a language service for the first file
 	session.WaitForBackgroundTasks()
 	_, err := session.GetLanguageService(context.Background(), uri1)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 }

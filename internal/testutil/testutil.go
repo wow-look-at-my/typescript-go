@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/testutil/race"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func AssertPanics(tb testing.TB, fn func(), expected any, msgAndArgs ...any) {
@@ -23,8 +23,8 @@ func AssertPanics(tb testing.TB, fn func(), expected any, msgAndArgs ...any) {
 		fn()
 	}()
 
-	assert.Assert(tb, got != nil, msgAndArgs...)
-	assert.Equal(tb, got, expected, msgAndArgs...)
+	require.True(tb, got != nil, msgAndArgs...)
+	require.Equal(tb, got, expected, msgAndArgs...)
 }
 
 func RecoverAndFail(t *testing.T, msg string) {

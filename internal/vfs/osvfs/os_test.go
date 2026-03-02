@@ -10,7 +10,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/repo"
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestOS(t *testing.T) {
@@ -25,12 +25,12 @@ func TestOS(t *testing.T) {
 		goModPath := tspath.NormalizePath(goMod)
 
 		expectedRaw, err := os.ReadFile(goMod)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		expected := string(expectedRaw)
 
 		contents, ok := fs.ReadFile(goModPath)
-		assert.Assert(t, ok)
-		assert.Equal(t, contents, expected)
+		require.True(t, ok)
+		require.Equal(t, contents, expected)
 	})
 
 	t.Run("Realpath", func(t *testing.T) {
@@ -48,7 +48,7 @@ func TestOS(t *testing.T) {
 			expected = strings.ToUpper(expected[:1]) + expected[1:]
 		}
 		realpath := fs.Realpath(home)
-		assert.Equal(t, realpath, expected)
+		require.Equal(t, realpath, expected)
 	})
 
 	t.Run("UseCaseSensitiveFileNames", func(t *testing.T) {
@@ -59,9 +59,9 @@ func TestOS(t *testing.T) {
 
 		switch runtime.GOOS {
 		case "windows":
-			assert.Assert(t, !fs.UseCaseSensitiveFileNames())
+			require.True(t, !fs.UseCaseSensitiveFileNames())
 		case "linux":
-			assert.Assert(t, fs.UseCaseSensitiveFileNames())
+			require.True(t, fs.UseCaseSensitiveFileNames())
 		}
 	})
 }

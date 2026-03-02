@@ -11,12 +11,12 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/json"
 	"github.com/microsoft/typescript-go/internal/testutil/jstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 type stringTest struct {
-	number Number
-	str    string
+	number	Number
+	str	string
 }
 
 var stringTests = slices.Concat([]stringTest{
@@ -59,7 +59,7 @@ func TestString(t *testing.T) {
 
 		t.Run(fmt.Sprintf("%v", fInput), func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, test.number.String(), test.str)
+			require.Equal(t, test.number.String(), test.str)
 		})
 	}
 }
@@ -128,9 +128,9 @@ var fromStringTests = []stringTest{
 	{0, "\uFEFF"},
 	{0, "\u00A0"},
 	{10000000000000000000, "010000000000000000000"},
-	{NaN(), "0x1.fffffffffffffp1023"}, // Make sure Go's extended float syntax doesn't work.
+	{NaN(), "0x1.fffffffffffffp1023"},	// Make sure Go's extended float syntax doesn't work.
 	{NaN(), "0X_1FFFP-16"},
-	{NaN(), "1_000"}, // NumberToString doesn't handle underscores.
+	{NaN(), "1_000"},	// NumberToString doesn't handle underscores.
 	{0, "0x0"},
 	{0, "0X0"},
 	{NaN(), "0xOOPS"},
@@ -194,7 +194,7 @@ func TestStringRoundtrip(t *testing.T) {
 	for _, test := range stringTests {
 		t.Run(test.str, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, FromString(test.str).String(), test.str)
+			require.Equal(t, FromString(test.str).String(), test.str)
 		})
 	}
 }
@@ -212,7 +212,7 @@ func TestStringJS(t *testing.T) {
 			t.Run(fmt.Sprintf("%v", float64(test.number)), func(t *testing.T) {
 				t.Parallel()
 				assertEqualNumber(t, stringTestsResults[i].number, test.number)
-				assert.Equal(t, stringTestsResults[i].str, test.str)
+				require.Equal(t, stringTestsResults[i].str, test.str)
 			})
 		}
 	})
@@ -253,12 +253,12 @@ func FuzzStringJS(f *testing.F) {
 		nStr := n.String()
 
 		results := getStringResultsFromJS(t, []stringTest{{number: n, str: nStr}})
-		assert.Equal(t, len(results), 1)
+		require.Equal(t, len(results), 1)
 
 		nToJSStr := results[0].str
 		nStrToJSNumber := results[0].number
 
-		assert.Equal(t, nStr, nToJSStr)
+		require.Equal(t, nStr, nToJSStr)
 		assertEqualNumber(t, n, nStrToJSNumber)
 	})
 }
@@ -283,7 +283,7 @@ func FuzzFromStringJS(f *testing.F) {
 
 		n := FromString(s)
 		results := getStringResultsFromJS(t, []stringTest{{str: s}})
-		assert.Equal(t, len(results), 1)
+		require.Equal(t, len(results), 1)
 		assertEqualNumber(t, n, results[0].number)
 	})
 }
@@ -293,24 +293,24 @@ func getStringResultsFromJS(t testing.TB, tests []stringTest) []stringTest {
 	tmpdir := t.TempDir()
 
 	type data struct {
-		Bits [2]uint32 `json:"bits"`
-		Str  string    `json:"str"`
+		Bits	[2]uint32	`json:"bits"`
+		Str	string		`json:"str"`
 	}
 
 	inputData := make([]data, len(tests))
 	for i, test := range tests {
 		inputData[i] = data{
-			Bits: numberToUint32Array(test.number),
-			Str:  test.str,
+			Bits:	numberToUint32Array(test.number),
+			Str:	test.str,
 		}
 	}
 
 	jsonInput, err := json.Marshal(inputData)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	jsonInputPath := filepath.Join(tmpdir, "input.json")
 	err = os.WriteFile(jsonInputPath, jsonInput, 0o644)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	script := `
 		import fs from 'fs';
@@ -341,14 +341,14 @@ func getStringResultsFromJS(t testing.TB, tests []stringTest) []stringTest {
 	`
 
 	outputData, err := jstest.EvalNodeScript[[]data](t, script, tmpdir, jsonInputPath)
-	assert.NilError(t, err)
-	assert.Equal(t, len(outputData), len(tests))
+	require.NoError(t, err)
+	require.Equal(t, len(outputData), len(tests))
 
 	output := make([]stringTest, len(tests))
 	for i, outputDatum := range outputData {
 		output[i] = stringTest{
-			number: uint32ArrayToNumber(outputDatum.Bits),
-			str:    outputDatum.Str,
+			number:	uint32ArrayToNumber(outputDatum.Bits),
+			str:	outputDatum.Str,
 		}
 	}
 

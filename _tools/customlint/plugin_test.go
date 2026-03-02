@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/tools/go/analysis/checker"
 	"golang.org/x/tools/go/packages"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 	"gotest.tools/v3/golden"
 )
 
@@ -32,13 +32,13 @@ func TestPlugin(t *testing.T) {
 	var plugin plugin
 
 	config := &packages.Config{
-		Mode: packages.LoadSyntax,
-		Dir:  testdataDir,
-		Env:  append(os.Environ(), "GO111MODULE=on", "GOPROXY=off", "GOWORK=off"),
+		Mode:	packages.LoadSyntax,
+		Dir:	testdataDir,
+		Env:	append(os.Environ(), "GO111MODULE=on", "GOPROXY=off", "GOWORK=off"),
 	}
 
 	pkgs, err := packages.Load(config, "./...")
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	var allFiles []string
 	for _, pkg := range pkgs {
@@ -46,22 +46,22 @@ func TestPlugin(t *testing.T) {
 	}
 
 	for _, pkg := range pkgs {
-		assert.Assert(t, pkg.Name != "", "%s failed to load: %v", pkg.PkgPath, pkg.Errors)
+		require.True(t, pkg.Name != "", "%s failed to load: %v", pkg.PkgPath, pkg.Errors)
 		for _, err := range pkg.Errors {
 			t.Error(err)
 		}
 	}
 
 	analyzers, err := plugin.BuildAnalyzers()
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	graph, err := checker.Analyze(analyzers, pkgs, nil)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	diagsByPath := make(map[string]map[diagnostic]struct{})
 
 	for act := range graph.All() {
-		assert.NilError(t, act.Err)
+		require.NoError(t, act.Err)
 		if !act.IsRoot {
 			continue
 		}
@@ -75,10 +75,10 @@ func TestPlugin(t *testing.T) {
 			}
 
 			d := diagnostic{
-				analyzerName: act.Analyzer.Name,
-				pos:          pos,
-				end:          end,
-				message:      diag.Message,
+				analyzerName:	act.Analyzer.Name,
+				pos:		pos,
+				end:		end,
+				message:	diag.Message,
 			}
 
 			path := act.Package.Fset.File(diag.Pos).Name()
@@ -94,7 +94,7 @@ func TestPlugin(t *testing.T) {
 
 	for _, p := range allFiles {
 		rel, err := filepath.Rel(testdataDir, p)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		prettyPath := filepath.ToSlash(rel)
 
 		t.Run(prettyPath, func(t *testing.T) {
@@ -122,10 +122,10 @@ func TestPlugin(t *testing.T) {
 			})
 
 			fileContents, readErr := os.ReadFile(p)
-			assert.NilError(t, readErr)
+			require.NoError(t, readErr)
 
 			goldenPath, relErr := filepath.Rel(testdataDir, p+".golden")
-			assert.NilError(t, relErr)
+			require.NoError(t, relErr)
 
 			expected := toGolden(fileContents, diags)
 
@@ -135,10 +135,10 @@ func TestPlugin(t *testing.T) {
 }
 
 type diagnostic struct {
-	pos          token.Position
-	end          token.Position
-	analyzerName string
-	message      string
+	pos		token.Position
+	end		token.Position
+	analyzerName	string
+	message		string
 }
 
 func toGolden(fileContents []byte, diags []*diagnostic) string {

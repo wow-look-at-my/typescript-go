@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/tspath"
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/assert/cmp"
+	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestSymlinkRealpath(t *testing.T) {
@@ -17,18 +17,18 @@ func TestSymlinkRealpath(t *testing.T) {
 	targetFile, linkFile := setupSymlinks(t)
 
 	gotContents, err := os.ReadFile(linkFile)
-	assert.NilError(t, err)
-	assert.Equal(t, string(gotContents), "hello")
+	require.NoError(t, err)
+	require.Equal(t, string(gotContents), "hello")
 
 	fs := FS()
 
 	targetRealpath := fs.Realpath(tspath.NormalizePath(targetFile))
 	linkRealpath := fs.Realpath(tspath.NormalizePath(linkFile))
 
-	if !assert.Check(t, cmp.Equal(targetRealpath, linkRealpath)) {
+	if !assert.Equal(t, targetRealpath, linkRealpath) {
 		cmd := exec.Command("node", "-e", `console.log({ native: fs.realpathSync.native(process.argv[1]), node: fs.realpathSync(process.argv[1]) })`, linkFile)
 		out, err := cmd.CombinedOutput()
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		t.Logf("node: %s", out)
 	}
 }
@@ -44,8 +44,8 @@ func setupSymlinks(tb testing.TB) (targetFile, linkFile string) {
 	link := filepath.Join(tmp, "link")
 	linkFile = filepath.Join(link, "file")
 
-	assert.NilError(tb, os.MkdirAll(target, 0o777))
-	assert.NilError(tb, os.WriteFile(targetFile, []byte("hello"), 0o666))
+	require.NoError(tb, os.MkdirAll(target, 0o777))
+	require.NoError(tb, os.WriteFile(targetFile, []byte("hello"), 0o666))
 
 	mklink(tb, target, link, true)
 
@@ -83,20 +83,20 @@ func TestGetAccessibleEntries(t *testing.T) {
 	target := filepath.Join(tmp, "target")
 	link := filepath.Join(tmp, "link")
 
-	assert.NilError(t, os.MkdirAll(target, 0o777))
-	assert.NilError(t, os.MkdirAll(link, 0o777))
+	require.NoError(t, os.MkdirAll(target, 0o777))
+	require.NoError(t, os.MkdirAll(link, 0o777))
 
 	targetFile1 := filepath.Join(target, "file1")
 	targetFile2 := filepath.Join(target, "file2")
 
-	assert.NilError(t, os.WriteFile(targetFile1, []byte("hello"), 0o666))
-	assert.NilError(t, os.WriteFile(targetFile2, []byte("world"), 0o666))
+	require.NoError(t, os.WriteFile(targetFile1, []byte("hello"), 0o666))
+	require.NoError(t, os.WriteFile(targetFile2, []byte("world"), 0o666))
 
 	targetDir1 := filepath.Join(target, "dir1")
 	targetDir2 := filepath.Join(target, "dir2")
 
-	assert.NilError(t, os.MkdirAll(targetDir1, 0o777))
-	assert.NilError(t, os.MkdirAll(targetDir2, 0o777))
+	require.NoError(t, os.MkdirAll(targetDir1, 0o777))
+	require.NoError(t, os.MkdirAll(targetDir2, 0o777))
 
 	mklink(t, targetFile1, filepath.Join(link, "file1"), false)
 	mklink(t, targetFile2, filepath.Join(link, "file2"), false)
@@ -107,6 +107,6 @@ func TestGetAccessibleEntries(t *testing.T) {
 
 	entries := fs.GetAccessibleEntries(tspath.NormalizePath(link))
 
-	assert.DeepEqual(t, entries.Directories, []string{"dir1", "dir2"})
-	assert.DeepEqual(t, entries.Files, []string{"file1", "file2"})
+	require.Equal(t, entries.Directories, []string{"dir1", "dir2"})
+	require.Equal(t, entries.Files, []string{"file1", "file2"})
 }

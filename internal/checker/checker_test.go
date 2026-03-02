@@ -13,7 +13,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestGetSymbolAtLocation(t *testing.T) {
@@ -25,7 +25,7 @@ func TestGetSymbolAtLocation(t *testing.T) {
 declare const foo: Foo;
 foo.bar;`
 	fs := vfstest.FromMap(map[string]string{
-		"/foo.ts": content,
+		"/foo.ts":	content,
 		"/tsconfig.json": `
 				{
 					"compilerOptions": {},
@@ -39,11 +39,11 @@ foo.bar;`
 	host := compiler.NewCompilerHost(cd, fs, bundled.LibPath(), nil, nil)
 
 	parsed, errors := tsoptions.GetParsedCommandLineOfConfigFile("/tsconfig.json", &core.CompilerOptions{}, nil, host, nil)
-	assert.Equal(t, len(errors), 0, "Expected no errors in parsed command line")
+	require.Equal(t, len(errors), 0, "Expected no errors in parsed command line")
 
 	p := compiler.NewProgram(compiler.ProgramOptions{
-		Config: parsed,
-		Host:   host,
+		Config:	parsed,
+		Host:	host,
 	})
 	p.BindSourceFiles()
 	c, done := p.GetTypeChecker(t.Context())
@@ -70,10 +70,10 @@ func BenchmarkNewChecker(b *testing.B) {
 
 	host := compiler.NewCompilerHost(rootPath, fs, bundled.LibPath(), nil, nil)
 	parsed, errors := tsoptions.GetParsedCommandLineOfConfigFile(tspath.CombinePaths(rootPath, "tsconfig.json"), &core.CompilerOptions{}, nil, host, nil)
-	assert.Equal(b, len(errors), 0, "Expected no errors in parsed command line")
+	require.Equal(b, len(errors), 0, "Expected no errors in parsed command line")
 	p := compiler.NewProgram(compiler.ProgramOptions{
-		Config: parsed,
-		Host:   host,
+		Config:	parsed,
+		Host:	host,
 	})
 
 	b.ReportAllocs()

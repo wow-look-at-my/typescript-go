@@ -8,12 +8,12 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433
 	github.com/google/go-cmp v0.7.0
 	github.com/peter-evans/patience v0.3.0
+	github.com/wow-look-at-my/testify v0.0.0-20260217010200-5fd2c08e3abb
 	github.com/zeebo/xxh3 v1.1.0
 	golang.org/x/sync v0.19.0
 	golang.org/x/sys v0.41.0
 	golang.org/x/term v0.40.0
 	golang.org/x/text v0.34.0
-	gotest.tools/v3 v3.5.2
 )
 
 require (
@@ -21,6 +21,7 @@ require (
 	github.com/matryer/moq v0.6.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mvdan.cc/gofumpt v0.9.2 // indirect
 )
 

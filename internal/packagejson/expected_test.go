@@ -5,17 +5,17 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/json"
 	"github.com/microsoft/typescript-go/internal/packagejson"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestExpected(t *testing.T) {
 	t.Parallel()
 
 	type packageJson struct {
-		Name    packagejson.Expected[string] `json:"name"`
-		Version packagejson.Expected[string] `json:"version"`
-		Exports packagejson.Expected[any]    `json:"exports"`
-		Main    packagejson.Expected[string] `json:"main"`
+		Name	packagejson.Expected[string]	`json:"name"`
+		Version	packagejson.Expected[string]	`json:"version"`
+		Exports	packagejson.Expected[any]	`json:"exports"`
+		Main	packagejson.Expected[string]	`json:"main"`
 	}
 
 	var p packageJson
@@ -27,18 +27,18 @@ func TestExpected(t *testing.T) {
 	}`
 
 	err := json.Unmarshal([]byte(jsonString), &p)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, p.Name.Valid, true)
-	assert.Equal(t, p.Name.Value, "test")
+	require.Equal(t, p.Name.Valid, true)
+	require.Equal(t, p.Name.Value, "test")
 
-	assert.Equal(t, p.Version.Valid, false)
-	assert.Equal(t, p.Version.Value, "")
+	require.Equal(t, p.Version.Valid, false)
+	require.Equal(t, p.Version.Value, "")
 
-	assert.Assert(t, p.Exports.Null)
-	assert.Equal(t, p.Exports.Valid, false)
+	require.True(t, p.Exports.Null)
+	require.Equal(t, p.Exports.Valid, false)
 
-	assert.Equal(t, p.Main.Valid, false)
-	assert.Equal(t, p.Main.Null, false)
-	assert.Equal(t, p.Main.Value, "")
+	require.Equal(t, p.Main.Valid, false)
+	require.Equal(t, p.Main.Null, false)
+	require.Equal(t, p.Main.Value, "")
 }

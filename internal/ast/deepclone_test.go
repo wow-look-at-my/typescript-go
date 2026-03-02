@@ -5,12 +5,12 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/testutil/parsetestutil"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 type NodeComparisonWorkItem struct {
-	original *ast.Node
-	copy     *ast.Node
+	original	*ast.Node
+	copy		*ast.Node
 }
 
 func getChildren(node *ast.Node) []*ast.Node {
@@ -25,9 +25,9 @@ func getChildren(node *ast.Node) []*ast.Node {
 func TestDeepCloneNodeSanityCheck(t *testing.T) {
 	t.Parallel()
 	data := []struct {
-		title string
-		input string
-		jsx   bool
+		title	string
+		input	string
+		jsx	bool
 	}{
 		{title: "StringLiteral#1", input: `;"test"`},
 		{title: "StringLiteral#2", input: `;'test'`},
@@ -584,10 +584,10 @@ func TestDeepCloneNodeSanityCheck(t *testing.T) {
 			for len(work) > 0 {
 				nextWork := []NodeComparisonWorkItem{}
 				for _, item := range work {
-					assert.Assert(t, item.original != item.copy)
+					require.True(t, item.original != item.copy)
 					originalChildren := getChildren(item.original)
 					copyChildren := getChildren(item.copy)
-					assert.Equal(t, len(originalChildren), len(copyChildren))
+					require.Equal(t, len(originalChildren), len(copyChildren))
 					for i, child := range originalChildren {
 						nextWork = append(nextWork, NodeComparisonWorkItem{child, copyChildren[i]})
 					}

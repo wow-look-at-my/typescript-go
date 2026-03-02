@@ -14,19 +14,19 @@ import (
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 type testFile struct {
-	fileName string
-	contents string
+	fileName	string
+	contents	string
 }
 
 type programTest struct {
-	testName      string
-	files         []testFile
-	expectedFiles []string
-	target        core.ScriptTarget
+	testName	string
+	files		[]testFile
+	expectedFiles	[]string
+	target		core.ScriptTarget
 }
 
 var esnextLibs = []string{
@@ -127,7 +127,7 @@ var esnextLibs = []string{
 
 var programTestCases = []programTest{
 	{
-		testName: "BasicFileOrdering",
+		testName:	"BasicFileOrdering",
 		files: []testFile{
 			{fileName: "c:/dev/src/index.ts", contents: "/// <reference path='c:/dev/src2/a/5.ts' />\n/// <reference path='c:/dev/src2/a/10.ts' />"},
 			{fileName: "c:/dev/src2/a/5.ts", contents: "/// <reference path='4.ts' />"},
@@ -155,10 +155,10 @@ var programTestCases = []programTest{
 				"c:/dev/src2/a/10.ts",
 				"c:/dev/src/index.ts",
 			}),
-		target: core.ScriptTargetESNext,
+		target:	core.ScriptTargetESNext,
 	},
 	{
-		testName: "FileOrderingImports",
+		testName:	"FileOrderingImports",
 		files: []testFile{
 			{fileName: "c:/dev/src/index.ts", contents: "import * as five from '../src2/a/5.ts';\nimport * as ten from '../src2/a/10.ts';"},
 			{fileName: "c:/dev/src2/a/5.ts", contents: "import * as four from './4.ts';"},
@@ -186,10 +186,10 @@ var programTestCases = []programTest{
 				"c:/dev/src2/a/10.ts",
 				"c:/dev/src/index.ts",
 			}),
-		target: core.ScriptTargetESNext,
+		target:	core.ScriptTargetESNext,
 	},
 	{
-		testName: "FileOrderingCycles",
+		testName:	"FileOrderingCycles",
 		files: []testFile{
 			{fileName: "c:/dev/src/index.ts", contents: "import * as five from '../src2/a/5.ts';\nimport * as ten from '../src2/a/10.ts';"},
 			{fileName: "c:/dev/src2/a/5.ts", contents: "import * as four from './4.ts';"},
@@ -217,7 +217,7 @@ var programTestCases = []programTest{
 				"c:/dev/src2/a/10.ts",
 				"c:/dev/src/index.ts",
 			}),
-		target: core.ScriptTargetESNext,
+		target:	core.ScriptTargetESNext,
 	},
 }
 
@@ -246,11 +246,11 @@ func TestProgram(t *testing.T) {
 			program := compiler.NewProgram(compiler.ProgramOptions{
 				Config: &tsoptions.ParsedCommandLine{
 					ParsedConfig: &core.ParsedOptions{
-						FileNames:       []string{"c:/dev/src/index.ts"},
-						CompilerOptions: &opts,
+						FileNames:		[]string{"c:/dev/src/index.ts"},
+						CompilerOptions:	&opts,
 					},
 				},
-				Host: compiler.NewCompilerHost("c:/dev/src", fs, bundled.LibPath(), nil, nil),
+				Host:	compiler.NewCompilerHost("c:/dev/src", fs, bundled.LibPath(), nil, nil),
 			})
 
 			actualFiles := []string{}
@@ -258,7 +258,7 @@ func TestProgram(t *testing.T) {
 				actualFiles = append(actualFiles, strings.TrimPrefix(file.FileName(), libPrefix))
 			}
 
-			assert.DeepEqual(t, testCase.expectedFiles, actualFiles)
+			require.Equal(t, testCase.expectedFiles, actualFiles)
 		})
 	}
 }
@@ -283,11 +283,11 @@ func BenchmarkNewProgram(b *testing.B) {
 			programOpts := compiler.ProgramOptions{
 				Config: &tsoptions.ParsedCommandLine{
 					ParsedConfig: &core.ParsedOptions{
-						FileNames:       []string{"c:/dev/src/index.ts"},
-						CompilerOptions: &opts,
+						FileNames:		[]string{"c:/dev/src/index.ts"},
+						CompilerOptions:	&opts,
 					},
 				},
-				Host: compiler.NewCompilerHost("c:/dev/src", fs, bundled.LibPath(), nil, nil),
+				Host:	compiler.NewCompilerHost("c:/dev/src", fs, bundled.LibPath(), nil, nil),
 			}
 
 			for b.Loop() {
@@ -307,11 +307,11 @@ func BenchmarkNewProgram(b *testing.B) {
 		host := compiler.NewCompilerHost(rootPath, fs, bundled.LibPath(), nil, nil)
 
 		parsed, errors := tsoptions.GetParsedCommandLineOfConfigFile(tspath.CombinePaths(rootPath, "tsconfig.json"), nil, nil, host, nil)
-		assert.Equal(b, len(errors), 0, "Expected no errors in parsed command line")
+		require.Equal(b, len(errors), 0, "Expected no errors in parsed command line")
 
 		opts := compiler.ProgramOptions{
-			Config: parsed,
-			Host:   host,
+			Config:	parsed,
+			Host:	host,
 		}
 
 		for b.Loop() {

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/collections"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestOrderedSet(t *testing.T) {
@@ -17,29 +17,29 @@ func TestOrderedSet(t *testing.T) {
 	s.Add(2)
 	s.Add(3)
 
-	assert.Assert(t, s.Has(1))
-	assert.Assert(t, s.Has(2))
-	assert.Assert(t, s.Has(3))
+	require.True(t, s.Has(1))
+	require.True(t, s.Has(2))
+	require.True(t, s.Has(3))
 
-	assert.Assert(t, s.Delete(2))
+	require.True(t, s.Delete(2))
 
 	values := slices.Collect(s.Values())
-	assert.Equal(t, len(values), 2)
-	assert.Assert(t, slices.IsSorted(values))
+	require.Equal(t, len(values), 2)
+	require.True(t, slices.IsSorted(values))
 
 	s.Clear()
 
-	assert.Equal(t, s.Size(), 0)
-	assert.Assert(t, !s.Has(1))
-	assert.Assert(t, !s.Has(2))
-	assert.Assert(t, !s.Has(3))
+	require.Equal(t, s.Size(), 0)
+	require.True(t, !s.Has(1))
+	require.True(t, !s.Has(2))
+	require.True(t, !s.Has(3))
 
 	s2 := s.Clone()
-	assert.Assert(t, s != s2)
-	assert.Equal(t, s2.Size(), 0)
+	require.True(t, s != s2)
+	require.Equal(t, s2.Size(), 0)
 }
 
-func TestOrderedSetWithSizeHint(t *testing.T) { //nolint:paralleltest
+func TestOrderedSetWithSizeHint(t *testing.T) {	//nolint:paralleltest
 	const N = 1024
 
 	allocs := testing.AllocsPerRun(10, func() {
@@ -49,5 +49,5 @@ func TestOrderedSetWithSizeHint(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	assert.Assert(t, allocs < 10, "allocs = %v", allocs)
+	require.True(t, allocs < 10, "allocs = %v", allocs)
 }
