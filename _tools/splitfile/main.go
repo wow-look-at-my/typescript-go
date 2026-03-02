@@ -9,8 +9,8 @@
 //   - -names: extract specific top-level declarations (functions, methods, types, vars, consts) by name
 //   - -startline/-endline: extract all top-level declarations whose start line falls in [startline, endline]
 //
-// The tool preserves the package declaration, adds necessary imports via goimports,
-// and removes extracted declarations from the source file.
+// The tool copies the full import block from the source to the destination file.
+// Run goimports afterwards to clean up unused imports in both files.
 package main
 
 import (
@@ -21,7 +21,6 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"os/exec"
 	"sort"
 	"strings"
 )
@@ -69,6 +68,19 @@ func main() {
 		}
 	}
 
+	// Find the import block text to copy to destination
+	var importBlock string
+	for _, decl := range file.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok || gd.Tok != token.IMPORT {
+			continue
+		}
+		importStart := fset.Position(gd.Pos()).Offset
+		importEnd := fset.Position(gd.End()).Offset
+		importBlock = string(content[importStart:importEnd])
+		break
+	}
+
 	// Collect byte ranges to extract (sorted by position)
 	type region struct {
 		start int // byte offset in content
@@ -80,6 +92,11 @@ func main() {
 	for _, decl := range file.Decls {
 		declStart := fset.Position(decl.Pos())
 		declEnd := fset.Position(decl.End())
+
+		// Skip import declarations — don't extract them
+		if gd, ok := decl.(*ast.GenDecl); ok && gd.Tok == token.IMPORT {
+			continue
+		}
 
 		// Include preceding doc comment if any
 		var docComment *ast.CommentGroup
@@ -96,40 +113,13 @@ func main() {
 			byteStart = commentStart.Offset
 		}
 
-		// Also include any preceding blank line / comment that's
-		// directly attached (scan backwards for whitespace)
-		for byteStart > 0 && content[byteStart-1] == '\n' {
-			// Include one preceding newline for spacing
+		// Include one preceding newline for spacing
+		if byteStart > 0 && content[byteStart-1] == '\n' {
 			byteStart--
-			break
 		}
 
 		shouldExtract := false
-		declName := ""
-
-		switch d := decl.(type) {
-		case *ast.FuncDecl:
-			declName = d.Name.Name
-			if d.Recv != nil && len(d.Recv.List) > 0 {
-				// Method — use "receiver.method" for display but match on method name
-				declName = d.Name.Name
-			}
-		case *ast.GenDecl:
-			// type, var, const — extract if any spec name matches
-			for _, spec := range d.Specs {
-				switch s := spec.(type) {
-				case *ast.TypeSpec:
-					declName = s.Name.Name
-				case *ast.ValueSpec:
-					for _, n := range s.Names {
-						if nameSet[n.Name] {
-							declName = n.Name
-							break
-						}
-					}
-				}
-			}
-		}
+		declName := getDeclName(decl, nameSet)
 
 		if len(nameSet) > 0 {
 			shouldExtract = nameSet[declName]
@@ -172,9 +162,13 @@ func main() {
 		return
 	}
 
-	// Build the destination file content
+	// Build the destination file content with package + imports + extracted code
 	var dstBuf bytes.Buffer
 	fmt.Fprintf(&dstBuf, "package %s\n\n", file.Name.Name)
+	if importBlock != "" {
+		dstBuf.WriteString(importBlock)
+		dstBuf.WriteString("\n\n")
+	}
 	for _, r := range regions {
 		dstBuf.Write(content[r.start:r.end])
 		dstBuf.WriteByte('\n')
@@ -208,29 +202,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Run gofumpt on both files to fix formatting
-	for _, f := range []string{*src, *dst} {
-		cmd := exec.Command("go", "tool", "mvdan.cc/gofumpt", "-w", f)
-		if out, err := cmd.CombinedOutput(); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: gofumpt failed on %s: %v\n%s\n", f, err, out)
-		}
-	}
+	// Count lines in resulting files
+	srcLines := bytes.Count(srcBuf.Bytes(), []byte("\n"))
+	dstData, _ := os.ReadFile(*dst)
+	dstLines := bytes.Count(dstData, []byte("\n"))
+	fmt.Printf("Split %d decls: %s -> %s (%d lines), src now %d lines\n",
+		len(regions), *src, *dst, dstLines, srcLines)
+}
 
-	// Run goimports on both files to fix imports
-	for _, f := range []string{*src, *dst} {
-		cmd := exec.Command("go", "tool", "golang.org/x/tools/cmd/goimports", "-w", f)
-		if out, err := cmd.CombinedOutput(); err != nil {
-			// goimports may not be available as a go tool, try PATH
-			cmd2 := exec.Command("goimports", "-w", f)
-			if out2, err2 := cmd2.CombinedOutput(); err2 != nil {
-				fmt.Fprintf(os.Stderr, "Warning: goimports unavailable for %s: %v\n%s%s\n", f, err, out, out2)
+func getDeclName(decl ast.Decl, nameSet map[string]bool) string {
+	switch d := decl.(type) {
+	case *ast.FuncDecl:
+		return d.Name.Name
+	case *ast.GenDecl:
+		for _, spec := range d.Specs {
+			switch s := spec.(type) {
+			case *ast.TypeSpec:
+				return s.Name.Name
+			case *ast.ValueSpec:
+				for _, n := range s.Names {
+					if len(nameSet) == 0 || nameSet[n.Name] {
+						return n.Name
+					}
+				}
+				if len(s.Names) > 0 {
+					return s.Names[0].Name
+				}
 			}
 		}
 	}
-
-	// Count lines in resulting files
-	srcLines := bytes.Count(srcBuf.Bytes(), []byte("\n"))
-	dstLines := bytes.Count(dstBuf.Bytes(), []byte("\n"))
-	fmt.Printf("Extracted %d declarations: %s (%d lines) -> %s (%d lines), src now %d lines\n",
-		len(regions), *src, dstLines, *dst, dstLines, srcLines)
+	return ""
 }
