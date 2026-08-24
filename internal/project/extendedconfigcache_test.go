@@ -12,7 +12,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 type noopClient struct{}
@@ -21,17 +21,17 @@ func (noopClient) WatchFiles(ctx context.Context, id WatcherID, watchers []*lspr
 	return nil
 }
 
-func (noopClient) UnwatchFiles(ctx context.Context, id WatcherID) error { return nil }
+func (noopClient) UnwatchFiles(ctx context.Context, id WatcherID) error	{ return nil }
 
-func (noopClient) RefreshDiagnostics(ctx context.Context) error { return nil }
+func (noopClient) RefreshDiagnostics(ctx context.Context) error	{ return nil }
 
 func (noopClient) PublishDiagnostics(ctx context.Context, params *lsproto.PublishDiagnosticsParams) error {
 	return nil
 }
 
-func (noopClient) RefreshInlayHints(ctx context.Context) error { return nil }
+func (noopClient) RefreshInlayHints(ctx context.Context) error	{ return nil }
 
-func (noopClient) RefreshCodeLens(ctx context.Context) error { return nil }
+func (noopClient) RefreshCodeLens(ctx context.Context) error	{ return nil }
 
 // TestExtendedConfigCacheRefCounting tests the invariant that each ExtendedSourceFile
 // of a config in the ConfigFileRegistry is ref'd exactly once per config that extends it,
@@ -47,19 +47,19 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		fsFromMap := vfstest.FromMap(files, false /*useCaseSensitiveFileNames*/)
 		fs := bundled.WrapFS(fsFromMap)
 		session := NewSession(&SessionInit{
-			BackgroundCtx: context.Background(),
+			BackgroundCtx:	context.Background(),
 			Options: &SessionOptions{
-				CurrentDirectory:   "/",
-				DefaultLibraryPath: bundled.LibPath(),
-				TypingsLocation:    "/home/src/Library/Caches/typescript",
-				PositionEncoding:   lsproto.PositionEncodingKindUTF8,
-				WatchEnabled:       false,
-				LoggingEnabled:     false,
+				CurrentDirectory:	"/",
+				DefaultLibraryPath:	bundled.LibPath(),
+				TypingsLocation:	"/home/src/Library/Caches/typescript",
+				PositionEncoding:	lsproto.PositionEncodingKindUTF8,
+				WatchEnabled:		false,
+				LoggingEnabled:		false,
 			},
-			FS:          fs,
-			Client:      noopClient{},
-			Logger:      logging.NewTestLogger(),
-			NpmExecutor: nil,
+			FS:		fs,
+			Client:		noopClient{},
+			Logger:		logging.NewTestLogger(),
+			NpmExecutor:	nil,
 		})
 		return session
 	}
@@ -90,7 +90,7 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		t.Helper()
 		path := session.toPath(fileName)
 		_, ok := session.extendedConfigCache.entries.Load(path)
-		assert.Equal(t, ok, false)
+		require.Equal(t, ok, false)
 	}
 
 	expectedExtendedRefCounts := func(session *Session, snapshot *Snapshot) map[tspath.Path]int {
@@ -111,7 +111,7 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		expected := expectedExtendedRefCounts(session, snapshot)
 		for path, want := range expected {
 			got := refCount(session, path)
-			assert.Equal(t, got, want, "extended config %s refCount mismatch", path)
+			require.Equal(t, got, want, "extended config %s refCount mismatch", path)
 		}
 	}
 
@@ -136,7 +136,7 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 			"/project/tsconfig.root.json": `{
 				"compilerOptions": {"target": "ES2020"}
 			}`,
-			"/project/src/main.ts": "export const x = 1;",
+			"/project/src/main.ts":	"export const x = 1;",
 		}
 
 		session := setup(files)
@@ -145,7 +145,7 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		defer release()
 
 		config := snapshot.ConfigFileRegistry.GetConfig("/project/tsconfig.json")
-		assert.Assert(t, config != nil)
+		require.True(t, config != nil)
 		// Shared root should only appear once in the flattened list.
 		var rootCount int
 		for _, f := range config.ExtendedSourceFiles() {
@@ -153,7 +153,7 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 				rootCount++
 			}
 		}
-		assert.Equal(t, rootCount, 1)
+		require.Equal(t, rootCount, 1)
 
 		// And the cache refcounts should match the registry's deduped list.
 		assertExtendedRefCountsMatchRegistry(t, session, snapshot)
@@ -189,13 +189,13 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		// Minimal ParseConfigHost implementation.
 		h := &testParseConfigHost{fs: fs, cwd: "/"}
 		cmd, diags := tsoptions.GetParsedCommandLineOfConfigFile("/project/tsconfig.json", nil, nil, h, nil /*extendedConfigCache*/)
-		assert.Equal(t, len(diags), 0)
-		assert.Assert(t, cmd != nil)
+		require.Equal(t, len(diags), 0)
+		require.True(t, cmd != nil)
 
 		extended := cmd.ExtendedSourceFiles()
-		assert.Equal(t, len(extended), 2)
-		assert.Equal(t, extended[0], "/project/Shared.json")
-		assert.Equal(t, extended[1], "/project/shared.json")
+		require.Equal(t, len(extended), 2)
+		require.Equal(t, extended[0], "/project/Shared.json")
+		require.Equal(t, extended[1], "/project/shared.json")
 	})
 
 	t.Run("project system dedupes case-only extends via cache", func(t *testing.T) {
@@ -208,7 +208,7 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 			"/project/shared.json": `{
 				"compilerOptions": {"strict": true}
 			}`,
-			"/project/src/main.ts": "export const x = 1;",
+			"/project/src/main.ts":	"export const x = 1;",
 		}
 
 		session := setup(files)
@@ -217,10 +217,10 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		defer release()
 
 		config := snapshot.ConfigFileRegistry.GetConfig("/project/tsconfig.json")
-		assert.Assert(t, config != nil)
+		require.True(t, config != nil)
 		extended := config.ExtendedSourceFiles()
-		assert.Equal(t, len(extended), 1)
-		assert.Equal(t, session.toPath(extended[0]), session.toPath("/project/shared.json"))
+		require.Equal(t, len(extended), 1)
+		require.Equal(t, session.toPath(extended[0]), session.toPath("/project/shared.json"))
 	})
 
 	t.Run("transitive extended config ref counting with new project", func(t *testing.T) {
@@ -247,12 +247,12 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 			"/user/username/projects/projectA/tsconfig.json": `{
 					"extends": "../shared/tsconfig.base.json"
 				}`,
-			"/user/username/projects/projectA/src/main.ts": "const a = 1;",
+			"/user/username/projects/projectA/src/main.ts":	"const a = 1;",
 			"/user/username/projects/projectB/tsconfig.json": `{
 					"extends": "../shared/tsconfig.base.json"
 				}`,
-			"/user/username/projects/projectB/src/main.ts": "const b = 2;",
-			"/user/username/projects/other/src/main.ts":    "const other = 3;",
+			"/user/username/projects/projectB/src/main.ts":	"const b = 2;",
+			"/user/username/projects/other/src/main.ts":	"const other = 3;",
 		}
 
 		session := setup(files)
@@ -263,10 +263,10 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 		// Verify extended configs are in cache with correct ref counts
 		baseEntry, baseOk := session.extendedConfigCache.entries.Load("/user/username/projects/shared/tsconfig.base.json")
 		commonEntry, commonOk := session.extendedConfigCache.entries.Load("/user/username/projects/shared/tsconfig.common.json")
-		assert.Assert(t, baseOk, "tsconfig.base.json should be in cache")
-		assert.Assert(t, commonOk, "tsconfig.common.json should be in cache")
-		assert.Equal(t, baseEntry.refCount, 1)
-		assert.Equal(t, commonEntry.refCount, 1)
+		require.True(t, baseOk, "tsconfig.base.json should be in cache")
+		require.True(t, commonOk, "tsconfig.common.json should be in cache")
+		require.Equal(t, baseEntry.refCount, 1)
+		require.Equal(t, commonEntry.refCount, 1)
 
 		// Step 2: Open file in projectB - this should acquire tsconfig.base.json from cache
 		// (not reparse it), and should also ref tsconfig.common.json (but doesn't due to bug)
@@ -285,24 +285,24 @@ func TestExtendedConfigCacheRefCounting(t *testing.T) {
 			{
 				Partial: &lsproto.TextDocumentContentChangePartial{
 					Range: lsproto.Range{
-						Start: lsproto.Position{Line: 0, Character: 0},
-						End:   lsproto.Position{Line: 0, Character: 12},
+						Start:	lsproto.Position{Line: 0, Character: 0},
+						End:	lsproto.Position{Line: 0, Character: 12},
 					},
-					Text: "const b = 3;",
+					Text:	"const b = 3;",
 				},
 			},
 		})
 		// This call triggered the panic
 		_, err := session.GetLanguageService(context.Background(), "file:///user/username/projects/projectB/src/main.ts")
-		assert.NilError(t, err)
+		require.NoError(t, err)
 	})
 }
 
 type testParseConfigHost struct {
-	fs  vfs.FS
-	cwd string
+	fs	vfs.FS
+	cwd	string
 }
 
-func (h *testParseConfigHost) FS() vfs.FS { return h.fs }
+func (h *testParseConfigHost) FS() vfs.FS	{ return h.fs }
 
-func (h *testParseConfigHost) GetCurrentDirectory() string { return h.cwd }
+func (h *testParseConfigHost) GetCurrentDirectory() string	{ return h.cwd }

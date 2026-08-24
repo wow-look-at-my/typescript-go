@@ -14,19 +14,19 @@ import (
 	"github.com/microsoft/typescript-go/internal/parser"
 	"github.com/microsoft/typescript-go/internal/repo"
 	"github.com/microsoft/typescript-go/internal/testutil/baseline"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestEncodeSourceFile(t *testing.T) {
 	t.Parallel()
 	sourceFile := parser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: "/test.ts",
-		Path:     "/test.ts",
+		FileName:	"/test.ts",
+		Path:		"/test.ts",
 	}, "import { bar } from \"bar\";\nexport function foo<T, U>(a: string, b: string): any {}\nfoo();", core.ScriptKindTS)
 	t.Run("baseline", func(t *testing.T) {
 		t.Parallel()
 		buf, err := encoder.EncodeSourceFile(sourceFile)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		str := formatEncodedSourceFile(buf)
 		baseline.Run(t, "encodeSourceFile.txt", str, baseline.Options{
@@ -38,13 +38,13 @@ func TestEncodeSourceFile(t *testing.T) {
 func TestEncodeSourceFileWithUnicodeEscapes(t *testing.T) {
 	t.Parallel()
 	sourceFile := parser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: "/test.ts",
-		Path:     "/test.ts",
+		FileName:	"/test.ts",
+		Path:		"/test.ts",
 	}, `let a = "😃"; let b = "\ud83d\ude03"; let c = "\udc00\ud83d\ude03"; let d = "\ud83d\ud83d\ude03"`, core.ScriptKindTS)
 	t.Run("baseline", func(t *testing.T) {
 		t.Parallel()
 		buf, err := encoder.EncodeSourceFile(sourceFile)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		str := formatEncodedSourceFile(buf)
 		baseline.Run(t, "encodeSourceFileWithUnicodeEscapes.txt", str, baseline.Options{
@@ -57,15 +57,15 @@ func BenchmarkEncodeSourceFile(b *testing.B) {
 	repo.SkipIfNoTypeScriptSubmodule(b)
 	filePath := filepath.Join(repo.TypeScriptSubmodulePath(), "src/compiler/checker.ts")
 	fileContent, err := os.ReadFile(filePath)
-	assert.NilError(b, err)
+	require.NoError(b, err)
 	sourceFile := parser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: "/checker.ts",
-		Path:     "/checker.ts",
+		FileName:	"/checker.ts",
+		Path:		"/checker.ts",
 	}, string(fileContent), core.ScriptKindTS)
 
 	for b.Loop() {
 		_, err := encoder.EncodeSourceFile(sourceFile)
-		assert.NilError(b, err)
+		require.NoError(b, err)
 	}
 }
 

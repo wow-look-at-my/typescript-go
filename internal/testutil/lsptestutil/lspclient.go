@@ -14,7 +14,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/lsp"
 	"github.com/microsoft/typescript-go/internal/lsp/lsproto"
 	"golang.org/x/sync/errgroup"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 // LSPReader reads LSP messages from a channel.
@@ -45,8 +45,8 @@ func (w *LSPWriter) Close() {
 }
 
 var (
-	_ lsp.Reader = (*LSPReader)(nil)
-	_ lsp.Writer = (*LSPWriter)(nil)
+	_	lsp.Reader	= (*LSPReader)(nil)
+	_	lsp.Writer	= (*LSPWriter)(nil)
 )
 
 // newLSPPipe creates a paired LSPReader and LSPWriter connected by a buffered channel.
@@ -60,19 +60,19 @@ type ServerRequestHandler func(ctx context.Context, req *lsproto.RequestMessage)
 
 // LSPClient provides infrastructure for communicating with an LSP server in tests.
 type LSPClient struct {
-	Server       *lsp.Server
-	inputWriter  *LSPWriter
-	outputReader *LSPReader
-	id           int32
-	ctx          context.Context
+	Server		*lsp.Server
+	inputWriter	*LSPWriter
+	outputReader	*LSPReader
+	id		int32
+	ctx		context.Context
 
 	// OnServerRequest handles server-initiated requests (e.g., workspace/configuration).
 	// If nil, all server requests receive a MethodNotFound error.
-	onServerRequest ServerRequestHandler
+	onServerRequest	ServerRequestHandler
 
 	// Async message handling
-	pendingRequests   map[jsonrpc.ID]chan *lsproto.ResponseMessage
-	pendingRequestsMu sync.Mutex
+	pendingRequests		map[jsonrpc.ID]chan *lsproto.ResponseMessage
+	pendingRequestsMu	sync.Mutex
 }
 
 // NewLSPClient creates an LSPClient wrapping the given server and pipes.
@@ -87,12 +87,12 @@ func NewLSPClient(t *testing.T, serverOpts lsp.ServerOptions, onServerRequest Se
 	ctx, cancel := context.WithCancel(t.Context())
 	g, ctx := errgroup.WithContext(ctx)
 	client := &LSPClient{
-		Server:          server,
-		inputWriter:     inputWriter,
-		outputReader:    outputReader,
-		pendingRequests: make(map[jsonrpc.ID]chan *lsproto.ResponseMessage),
-		onServerRequest: onServerRequest,
-		ctx:             ctx,
+		Server:			server,
+		inputWriter:		inputWriter,
+		outputReader:		outputReader,
+		pendingRequests:	make(map[jsonrpc.ID]chan *lsproto.ResponseMessage),
+		onServerRequest:	onServerRequest,
+		ctx:			ctx,
 	}
 
 	// Start server goroutine
@@ -195,11 +195,11 @@ func (c *LSPClient) handleServerRequest(ctx context.Context, req *lsproto.Reques
 	if response == nil {
 		// Default: unknown server request
 		response = &lsproto.ResponseMessage{
-			ID:      req.ID,
-			JSONRPC: req.JSONRPC,
+			ID:		req.ID,
+			JSONRPC:	req.JSONRPC,
 			Error: &jsonrpc.ResponseError{
-				Code:    int32(lsproto.ErrorCodeMethodNotFound),
-				Message: fmt.Sprintf("Unknown method: %s", req.Method),
+				Code:		int32(lsproto.ErrorCodeMethodNotFound),
+				Message:	fmt.Sprintf("Unknown method: %s", req.Method),
 			},
 		}
 	}
@@ -221,7 +221,7 @@ func (c *LSPClient) handleServerRequest(ctx context.Context, req *lsproto.Reques
 // WriteMsg validates and sends a message to the server.
 // This is an untyped low-level method; prefer SendRequest and SendNotification for typed interactions.
 func (c *LSPClient) WriteMsg(t *testing.T, msg *lsproto.Message) {
-	assert.NilError(t, json.MarshalWrite(io.Discard, msg), "failed to encode message as JSON")
+	require.NoError(t, json.MarshalWrite(io.Discard, msg), "failed to encode message as JSON")
 	if err := c.inputWriter.Write(msg); err != nil {
 		t.Fatalf("failed to write message: %v", err)
 	}

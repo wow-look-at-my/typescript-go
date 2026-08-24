@@ -123,7 +123,7 @@ type CompilerOptions struct {
 	AlwaysStrict Tristate `json:"alwaysStrict,omitzero"`
 	// Deprecated: Do not use outside of options parsing and validation.
 	BaseUrl string `json:"baseUrl,omitzero"`
-	// Deprecated: Do not use outside of options parsing and validation.
+	// OutFile concatenates and emits output to a single file. Only valid with module: none.
 	OutFile string `json:"outFile,omitzero"`
 
 	// Internal fields

@@ -1,73 +1,73 @@
 package autoimport
 
 import (
-	"reflect"
 	"testing"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestWordIndices(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		input         string
-		expectedWords []string
+		input		string
+		expectedWords	[]string
 	}{
 		// Basic camelCase
 		{
-			input:         "camelCase",
-			expectedWords: []string{"camelCase", "Case"},
+			input:		"camelCase",
+			expectedWords:	[]string{"camelCase", "Case"},
 		},
 		// snake_case
 		{
-			input:         "snake_case",
-			expectedWords: []string{"snake_case", "case"},
+			input:		"snake_case",
+			expectedWords:	[]string{"snake_case", "case"},
 		},
 		// ParseURL - uppercase sequence followed by lowercase
 		{
-			input:         "ParseURL",
-			expectedWords: []string{"ParseURL", "URL"},
+			input:		"ParseURL",
+			expectedWords:	[]string{"ParseURL", "URL"},
 		},
 		// XMLHttpRequest - multiple uppercase sequences
 		{
-			input:         "XMLHttpRequest",
-			expectedWords: []string{"XMLHttpRequest", "HttpRequest", "Request"},
+			input:		"XMLHttpRequest",
+			expectedWords:	[]string{"XMLHttpRequest", "HttpRequest", "Request"},
 		},
 		// Single word lowercase
 		{
-			input:         "hello",
-			expectedWords: []string{"hello"},
+			input:		"hello",
+			expectedWords:	[]string{"hello"},
 		},
 		// Single word uppercase
 		{
-			input:         "HELLO",
-			expectedWords: []string{"HELLO"},
+			input:		"HELLO",
+			expectedWords:	[]string{"HELLO"},
 		},
 		// Mixed with numbers
 		{
-			input:         "parseHTML5Parser",
-			expectedWords: []string{"parseHTML5Parser", "HTML5Parser", "Parser"},
+			input:		"parseHTML5Parser",
+			expectedWords:	[]string{"parseHTML5Parser", "HTML5Parser", "Parser"},
 		},
 		// Underscore variations
 		{
-			input:         "__proto__",
-			expectedWords: []string{"__proto__", "proto__"},
+			input:		"__proto__",
+			expectedWords:	[]string{"__proto__", "proto__"},
 		},
 		{
-			input:         "_private_member",
-			expectedWords: []string{"_private_member", "member"},
+			input:		"_private_member",
+			expectedWords:	[]string{"_private_member", "member"},
 		},
 		// Single character
 		{
-			input:         "a",
-			expectedWords: []string{"a"},
+			input:		"a",
+			expectedWords:	[]string{"a"},
 		},
 		{
-			input:         "A",
-			expectedWords: []string{"A"},
+			input:		"A",
+			expectedWords:	[]string{"A"},
 		},
 		// Consecutive underscores
 		{
-			input:         "test__double__underscore",
-			expectedWords: []string{"test__double__underscore", "double__underscore", "underscore"},
+			input:		"test__double__underscore",
+			expectedWords:	[]string{"test__double__underscore", "double__underscore", "underscore"},
 		},
 	}
 
@@ -81,10 +81,8 @@ func TestWordIndices(t *testing.T) {
 			for _, idx := range indices {
 				actualWords = append(actualWords, tt.input[idx:])
 			}
+			assert.Equal(t, actualWords, tt.expectedWords)
 
-			if !reflect.DeepEqual(actualWords, tt.expectedWords) {
-				t.Errorf("wordIndices(%q) produced words %v, want %v", tt.input, actualWords, tt.expectedWords)
-			}
 		})
 	}
 }

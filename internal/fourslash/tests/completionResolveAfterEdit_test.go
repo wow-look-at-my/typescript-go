@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/fourslash"
+	"github.com/wow-look-at-my/testify/require"
 	"github.com/microsoft/typescript-go/internal/testutil"
 )
 
@@ -28,9 +29,8 @@ declare const p: Point;
 	// Step 1: Get completions at the marker.
 	f.GoToMarker(t, "a")
 	completions := f.GetCompletions(t, nil /*userPreferences*/)
-	if completions == nil || len(completions.Items) == 0 {
-		t.Fatal("Expected completions but got none")
-	}
+	require.False(t, completions == nil || len(completions.Items) == 0)
+
 	firstItem := completions.Items[0]
 
 	// Step 2: Make a file change (insert a comment after marker).
@@ -39,7 +39,6 @@ declare const p: Point;
 
 	// Step 3: Resolve the first completion item from the original list.
 	resolved := f.ResolveCompletionItem(t, firstItem)
-	if resolved == nil {
-		t.Fatal("Expected resolved completion item but got nil")
-	}
+	require.NotNil(t, resolved)
+
 }

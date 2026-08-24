@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/core"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestParseCompilerOptionNoMissingFields(t *testing.T) {
@@ -29,8 +30,6 @@ func TestParseCompilerOptionNoMissingFields(t *testing.T) {
 			missingKeys = append(missingKeys, keyName)
 		}
 	}
-	if len(missingKeys) > 0 {
-		t.Errorf("The following keys are missing entries in the ParseCompilerOptions"+
-			" switch statement:\n%v", missingKeys)
-	}
+	assert.LessOrEqual(t, len(missingKeys), 0)
+
 }

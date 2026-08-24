@@ -9,7 +9,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestTestingLibPath(t *testing.T) {
@@ -18,12 +18,12 @@ func TestTestingLibPath(t *testing.T) {
 	p := bundled.TestingLibPath()
 
 	_, err := os.Stat(p)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	libdts := filepath.Join(p, "lib.d.ts")
 
 	_, err = os.Stat(libdts)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 }
 
 func TestEmbeddedLibs(t *testing.T) {
@@ -42,7 +42,7 @@ func TestEmbeddedLibs(t *testing.T) {
 		}
 		return nil
 	})
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
-	assert.DeepEqual(t, files, bundled.LibNames)
+	require.Equal(t, files, bundled.LibNames)
 }

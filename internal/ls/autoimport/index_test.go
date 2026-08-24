@@ -3,15 +3,15 @@ package autoimport
 import (
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 type testEntry struct {
-	name     string
-	package_ string
+	name		string
+	package_	string
 }
 
-func (e *testEntry) Name() string { return e.name }
+func (e *testEntry) Name() string	{ return e.name }
 
 func TestIndexClone(t *testing.T) {
 	t.Parallel()
@@ -30,23 +30,23 @@ func TestIndexClone(t *testing.T) {
 		})
 
 		// Original should have all 3 entries
-		assert.Equal(t, len(idx.entries), 3)
+		require.Equal(t, len(idx.entries), 3)
 
 		// Cloned should have 2 entries (only pkg-a)
-		assert.Equal(t, len(cloned.entries), 2)
+		require.Equal(t, len(cloned.entries), 2)
 
 		// Search should work on cloned index
 		results := cloned.Find("fooBar", true)
-		assert.Equal(t, len(results), 1)
-		assert.Equal(t, results[0].name, "fooBar")
+		require.Equal(t, len(results), 1)
+		require.Equal(t, results[0].name, "fooBar")
 
 		// bazQux should not be in cloned index
 		results = cloned.Find("bazQux", true)
-		assert.Equal(t, len(results), 0)
+		require.Equal(t, len(results), 0)
 
 		// Word prefix search should work
 		results = cloned.SearchWordPrefix("foo")
-		assert.Equal(t, len(results), 2)
+		require.Equal(t, len(results), 2)
 	})
 
 	t.Run("handles nil index", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestIndexClone(t *testing.T) {
 
 		var idx *Index[*testEntry]
 		cloned := idx.Clone(func(e *testEntry) bool { return true })
-		assert.Assert(t, cloned == nil)
+		require.True(t, cloned == nil)
 	})
 
 	t.Run("handles empty index", func(t *testing.T) {
@@ -62,7 +62,7 @@ func TestIndexClone(t *testing.T) {
 
 		idx := &Index[*testEntry]{}
 		cloned := idx.Clone(func(e *testEntry) bool { return true })
-		assert.Equal(t, len(cloned.entries), 0)
+		require.Equal(t, len(cloned.entries), 0)
 	})
 
 	t.Run("filters all entries", func(t *testing.T) {
@@ -73,7 +73,7 @@ func TestIndexClone(t *testing.T) {
 		idx.insertAsWords(&testEntry{name: "bazQux", package_: "pkg-b"})
 
 		cloned := idx.Clone(func(e *testEntry) bool { return false })
-		assert.Equal(t, len(cloned.entries), 0)
-		assert.Equal(t, len(cloned.index), 0)
+		require.Equal(t, len(cloned.entries), 0)
+		require.Equal(t, len(cloned.index), 0)
 	})
 }

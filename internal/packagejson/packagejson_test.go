@@ -13,7 +13,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/repo"
 	"github.com/microsoft/typescript-go/internal/testutil/filefixture"
 	"github.com/microsoft/typescript-go/internal/tspath"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 var packageJsonFixtures = []filefixture.Fixture{
@@ -29,9 +29,8 @@ func BenchmarkPackageJSON(b *testing.B) {
 			b.Run(f.Name(), func(b *testing.B) {
 				for b.Loop() {
 					var p packagejson.Fields
-					if err := json.Unmarshal(content, &p); err != nil {
-						b.Fatal(err)
-					}
+					require.NoError(b, json.Unmarshal(content, &p))
+
 				}
 			})
 		})
@@ -40,9 +39,8 @@ func BenchmarkPackageJSON(b *testing.B) {
 			b.Run(f.Name(), func(b *testing.B) {
 				for b.Loop() {
 					var p packagejson.Fields
-					if err := json.Unmarshal(content, &p); err != nil {
-						b.Fatal(err)
-					}
+					require.NoError(b, json.Unmarshal(content, &p))
+
 				}
 			})
 		})
@@ -52,8 +50,8 @@ func BenchmarkPackageJSON(b *testing.B) {
 				fileName := "/" + f.Name()
 				for b.Loop() {
 					parser.ParseSourceFile(ast.SourceFileParseOptions{
-						FileName: fileName,
-						Path:     tspath.Path(fileName),
+						FileName:	fileName,
+						Path:		tspath.Path(fileName),
 					}, string(content), core.ScriptKindJSON)
 				}
 			})
@@ -65,12 +63,12 @@ func TestParse(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		content string
-		want    packagejson.Fields
+		name	string
+		content	string
+		want	packagejson.Fields
 	}{
 		{
-			name: "duplicate names",
+			name:	"duplicate names",
 			content: `{
 				"name": "test-package",
 				"name": "test-package",
@@ -78,8 +76,8 @@ func TestParse(t *testing.T) {
 			}`,
 			want: packagejson.Fields{
 				HeaderFields: packagejson.HeaderFields{
-					Name:    packagejson.ExpectedOf("test-package"),
-					Version: packagejson.ExpectedOf("1.0.0"),
+					Name:		packagejson.ExpectedOf("test-package"),
+					Version:	packagejson.ExpectedOf("1.0.0"),
 				},
 			},
 		},
@@ -90,8 +88,8 @@ func TestParse(t *testing.T) {
 			t.Parallel()
 
 			got, err := packagejson.Parse([]byte(tt.content))
-			assert.NilError(t, err)
-			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(
+			require.NoError(t, err)
+			require.Equal(t, got, tt.want, cmpopts.IgnoreUnexported(
 				packagejson.Fields{},
 				packagejson.HeaderFields{},
 				packagejson.Expected[string]{},

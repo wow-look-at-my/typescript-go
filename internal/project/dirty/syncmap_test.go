@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 // testValue is a simple cloneable type for testing
@@ -38,7 +38,7 @@ func TestSyncMapProxyFor(t *testing.T) {
 			defer wg.Done()
 			var ok bool
 			entry1, ok = syncMap.Load("key1")
-			assert.Assert(t, ok, "entry1 should be loaded")
+			require.True(t, ok, "entry1 should be loaded")
 		}()
 
 		// Second goroutine loads the same entry
@@ -46,16 +46,16 @@ func TestSyncMapProxyFor(t *testing.T) {
 			defer wg.Done()
 			var ok bool
 			entry2, ok = syncMap.Load("key1")
-			assert.Assert(t, ok, "entry2 should be loaded")
+			require.True(t, ok, "entry2 should be loaded")
 		}()
 
 		wg.Wait()
 
 		// Both entries should exist and have the same initial value
-		assert.Equal(t, "original", entry1.Value().data)
-		assert.Equal(t, "original", entry2.Value().data)
-		assert.Equal(t, false, entry1.Dirty())
-		assert.Equal(t, false, entry2.Dirty())
+		require.Equal(t, "original", entry1.Value().data)
+		require.Equal(t, "original", entry2.Value().data)
+		require.Equal(t, false, entry1.Dirty())
+		require.Equal(t, false, entry2.Dirty())
 
 		// Now try to change both entries concurrently to trigger the proxy mechanism.
 		// (This change doesn't actually have to be concurrent to test the proxy behavior,
@@ -83,22 +83,22 @@ func TestSyncMapProxyFor(t *testing.T) {
 		// The exact final value depends on which goroutine wins the race, but both entries should be consistent
 		finalValue1 := entry1.Value().data
 		finalValue2 := entry2.Value().data
-		assert.Equal(t, finalValue1, finalValue2, "both entries should have the same final value")
+		require.Equal(t, finalValue1, finalValue2, "both entries should have the same final value")
 
 		// Both entries should be marked as dirty
-		assert.Equal(t, true, entry1.Dirty())
-		assert.Equal(t, true, entry2.Dirty())
+		require.Equal(t, true, entry1.Dirty())
+		require.Equal(t, true, entry2.Dirty())
 
 		// At least one entry should have proxyFor set (the one that lost the race)
 		hasProxy := (entry1.proxyFor != nil) || (entry2.proxyFor != nil)
-		assert.Assert(t, hasProxy, "at least one entry should have proxyFor set")
+		require.True(t, hasProxy, "at least one entry should have proxyFor set")
 
 		// If entry1 has a proxy, it should point to entry2, and vice versa
 		if entry1.proxyFor != nil {
-			assert.Equal(t, entry2, entry1.proxyFor, "entry1 should proxy to entry2")
+			require.Equal(t, entry2, entry1.proxyFor, "entry1 should proxy to entry2")
 		}
 		if entry2.proxyFor != nil {
-			assert.Equal(t, entry1, entry2.proxyFor, "entry2 should proxy to entry1")
+			require.Equal(t, entry1, entry2.proxyFor, "entry2 should proxy to entry1")
 		}
 	})
 
@@ -112,9 +112,9 @@ func TestSyncMapProxyFor(t *testing.T) {
 
 		// Load two entries for the same key
 		entry1, ok1 := syncMap.Load("key1")
-		assert.Assert(t, ok1)
+		require.True(t, ok1)
 		entry2, ok2 := syncMap.Load("key1")
-		assert.Assert(t, ok2)
+		require.True(t, ok2)
 
 		// Force one to become a proxy by making them both dirty in sequence
 		entry1.Change(func(v *testValue) {
@@ -139,20 +139,20 @@ func TestSyncMapProxyFor(t *testing.T) {
 		proxy.Change(func(v *testValue) {
 			v.data = "changed_through_proxy"
 		})
-		assert.Equal(t, "changed_through_proxy", target.Value().data)
-		assert.Equal(t, "changed_through_proxy", proxy.Value().data)
+		require.Equal(t, "changed_through_proxy", target.Value().data)
+		require.Equal(t, "changed_through_proxy", proxy.Value().data)
 
 		// ChangeIf through proxy should work
 		changed := proxy.ChangeIf(
 			func(v *testValue) bool { return v.data == "changed_through_proxy" },
 			func(v *testValue) { v.data = "conditional_change" },
 		)
-		assert.Assert(t, changed)
-		assert.Equal(t, "conditional_change", target.Value().data)
-		assert.Equal(t, "conditional_change", proxy.Value().data)
+		require.True(t, changed)
+		require.Equal(t, "conditional_change", target.Value().data)
+		require.Equal(t, "conditional_change", proxy.Value().data)
 
 		// Dirty status should be consistent
-		assert.Equal(t, target.Dirty(), proxy.Dirty())
+		require.Equal(t, target.Dirty(), proxy.Dirty())
 
 		// Locked operations should work through proxy
 		proxy.Locked(func(v Value[*testValue]) {
@@ -160,8 +160,8 @@ func TestSyncMapProxyFor(t *testing.T) {
 				val.data = "locked_change"
 			})
 		})
-		assert.Equal(t, "locked_change", target.Value().data)
-		assert.Equal(t, "locked_change", proxy.Value().data)
+		require.Equal(t, "locked_change", target.Value().data)
+		require.Equal(t, "locked_change", proxy.Value().data)
 	})
 
 	t.Run("proxy delete operations", func(t *testing.T) {
@@ -192,7 +192,7 @@ func TestSyncMapProxyFor(t *testing.T) {
 
 		// Both should reflect the deletion
 		_, exists := syncMap.Load("key1")
-		assert.Equal(t, false, exists, "key should be deleted from sync map")
+		require.Equal(t, false, exists, "key should be deleted from sync map")
 
 		// DeleteIf through proxy should work
 		base2 := map[string]*testValue{
@@ -218,7 +218,7 @@ func TestSyncMapProxyFor(t *testing.T) {
 		})
 
 		_, exists2 := syncMap2.Load("key2")
-		assert.Equal(t, false, exists2, "key2 should be deleted conditionally")
+		require.Equal(t, false, exists2, "key2 should be deleted conditionally")
 	})
 
 	t.Run("no proxy when no race", func(t *testing.T) {
@@ -231,15 +231,15 @@ func TestSyncMapProxyFor(t *testing.T) {
 
 		// Load and modify a single entry - no race condition
 		entry, ok := syncMap.Load("key1")
-		assert.Assert(t, ok)
+		require.True(t, ok)
 
 		entry.Change(func(v *testValue) {
 			v.data = "changed"
 		})
 
 		// Should not have a proxy since there was no race
-		assert.Assert(t, entry.proxyFor == nil, "entry should not have proxyFor when no race occurs")
-		assert.Equal(t, true, entry.Dirty())
-		assert.Equal(t, "changed", entry.Value().data)
+		require.True(t, entry.proxyFor == nil, "entry should not have proxyFor when no race occurs")
+		require.Equal(t, true, entry.Dirty())
+		require.Equal(t, "changed", entry.Value().data)
 	})
 }

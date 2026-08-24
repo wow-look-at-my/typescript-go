@@ -1221,9 +1221,6 @@ func SkipUnsupportedCompilerOptions(t *testing.T, options *core.CompilerOptions)
 	if options.BaseUrl != "" {
 		t.Skipf("unsupported baseUrl %s", options.BaseUrl)
 	}
-	if options.OutFile != "" {
-		t.Skipf("unsupported outFile %s", options.OutFile)
-	}
 	switch options.Target {
 	case core.ScriptTargetES5:
 		t.Skipf("unsupported target %s", options.Target)

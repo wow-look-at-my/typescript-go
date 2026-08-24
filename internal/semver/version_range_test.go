@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestWildcardsHaveSameString(t *testing.T) {
@@ -61,10 +61,10 @@ func assertAllVersionRangesHaveIdenticalStrings(t *testing.T, name string, strs 
 			for _, s2 := range strs {
 				t.Run(s1+" == "+s2, func(t *testing.T) {
 					v1, ok := TryParseVersionRange(s1)
-					assert.Assert(t, ok)
+					require.True(t, ok)
 					v2, ok := TryParseVersionRange(s2)
-					assert.Assert(t, ok)
-					assert.DeepEqual(t, v1.String(), v2.String())
+					require.True(t, ok)
+					require.Equal(t, v1.String(), v2.String())
 				})
 			}
 		}
@@ -72,64 +72,64 @@ func assertAllVersionRangesHaveIdenticalStrings(t *testing.T, name string, strs 
 }
 
 type testGoodBad struct {
-	good []string
-	bad  []string
+	good	[]string
+	bad	[]string
 }
 
 func TestVersionRanges(t *testing.T) {
 	t.Parallel()
 	assertRangesGoodBad(t, "1", testGoodBad{
-		good: []string{"1.0.0", "1.9.9", "1.0.0-pre", "1.0.0+build"},
-		bad:  []string{"0.0.0", "2.0.0", "0.0.0-pre", "0.0.0+build"},
+		good:	[]string{"1.0.0", "1.9.9", "1.0.0-pre", "1.0.0+build"},
+		bad:	[]string{"0.0.0", "2.0.0", "0.0.0-pre", "0.0.0+build"},
 	})
 	assertRangesGoodBad(t, "1.2", testGoodBad{
-		good: []string{"1.2.0", "1.2.9", "1.2.0-pre", "1.2.0+build"},
-		bad:  []string{"1.1.0", "1.3.0", "1.1.0-pre", "1.1.0+build"},
+		good:	[]string{"1.2.0", "1.2.9", "1.2.0-pre", "1.2.0+build"},
+		bad:	[]string{"1.1.0", "1.3.0", "1.1.0-pre", "1.1.0+build"},
 	})
 
 	assertRangesGoodBad(t, "1.2.3", testGoodBad{
-		good: []string{"1.2.3", "1.2.3+build"},
-		bad:  []string{"1.2.2", "1.2.4", "1.2.2-pre", "1.2.2+build", "1.2.3-pre"},
+		good:	[]string{"1.2.3", "1.2.3+build"},
+		bad:	[]string{"1.2.2", "1.2.4", "1.2.2-pre", "1.2.2+build", "1.2.3-pre"},
 	})
 
 	assertRangesGoodBad(t, "1.2.3-pre", testGoodBad{
-		good: []string{"1.2.3-pre", "1.2.3-pre+build.stuff"},
-		bad:  []string{"1.2.3", "1.2.3-pre.0", "1.2.3-pre.9", "1.2.3-pre.0+build", "1.2.3-pre.9+build", "1.2.3+build", "1.2.4"},
+		good:	[]string{"1.2.3-pre", "1.2.3-pre+build.stuff"},
+		bad:	[]string{"1.2.3", "1.2.3-pre.0", "1.2.3-pre.9", "1.2.3-pre.0+build", "1.2.3-pre.9+build", "1.2.3+build", "1.2.4"},
 	})
 
 	assertRangesGoodBad(t, "<3.8.0", testGoodBad{
-		good: []string{"3.6", "3.7"},
-		bad:  []string{"3.8", "3.9", "4.0"},
+		good:	[]string{"3.6", "3.7"},
+		bad:	[]string{"3.8", "3.9", "4.0"},
 	})
 
 	assertRangesGoodBad(t, "<=3.8.0", testGoodBad{
-		good: []string{"3.6", "3.7", "3.8"},
-		bad:  []string{"3.9", "4.0"},
+		good:	[]string{"3.6", "3.7", "3.8"},
+		bad:	[]string{"3.9", "4.0"},
 	})
 	assertRangesGoodBad(t, ">3.8.0", testGoodBad{
-		good: []string{"3.9", "4.0"},
-		bad:  []string{"3.6", "3.7", "3.8"},
+		good:	[]string{"3.9", "4.0"},
+		bad:	[]string{"3.6", "3.7", "3.8"},
 	})
 	assertRangesGoodBad(t, ">=3.8.0", testGoodBad{
-		good: []string{"3.8", "3.9", "4.0"},
-		bad:  []string{"3.6", "3.7"},
+		good:	[]string{"3.8", "3.9", "4.0"},
+		bad:	[]string{"3.6", "3.7"},
 	})
 
 	assertRangesGoodBad(t, "<3.8.0-0", testGoodBad{
-		good: []string{"3.6", "3.7"},
-		bad:  []string{"3.8", "3.9", "4.0"},
+		good:	[]string{"3.6", "3.7"},
+		bad:	[]string{"3.8", "3.9", "4.0"},
 	})
 
 	assertRangesGoodBad(t, "<=3.8.0-0", testGoodBad{
-		good: []string{"3.6", "3.7"},
-		bad:  []string{"3.8", "3.9", "4.0"},
+		good:	[]string{"3.6", "3.7"},
+		bad:	[]string{"3.8", "3.9", "4.0"},
 	})
 
 	// Big numbers in prerelease strings.
 	lotsaOnes := strings.Repeat("1", 320)
 	assertRangesGoodBad(t, ">=1.2.3-1"+lotsaOnes, testGoodBad{
-		good: []string{"1.2.3-1" + lotsaOnes, "1.2.3-11" + lotsaOnes + ".1", "1.2.3-1" + lotsaOnes + ".1+build"},
-		bad:  []string{"1.2.3-" + lotsaOnes + ".1+build"},
+		good:	[]string{"1.2.3-1" + lotsaOnes, "1.2.3-11" + lotsaOnes + ".1", "1.2.3-1" + lotsaOnes + ".1+build"},
+		bad:	[]string{"1.2.3-" + lotsaOnes + ".1+build"},
 	})
 }
 
@@ -922,26 +922,26 @@ func TestCaretsOfVersionRanges(t *testing.T) {
 }
 
 type testForRangeOnVersion struct {
-	rangeText   string
-	versionText string
-	expected    bool
+	rangeText	string
+	versionText	string
+	expected	bool
 }
 
 func assertRangesGoodBad(t *testing.T, versionRangeString string, tests testGoodBad) {
 	t.Run(versionRangeString, func(t *testing.T) {
 		t.Parallel()
 		versionRange, ok := TryParseVersionRange(versionRangeString)
-		assert.Assert(t, ok)
+		require.True(t, ok)
 		for _, good := range tests.good {
 			v, ok := TryParseVersion(good)
-			assert.Assert(t, ok)
-			assert.Assert(t, versionRange.Test(&v), "%s should be matched by range %s", good, versionRangeString)
+			require.NoError(t, ok)
+			require.True(t, versionRange.Test(&v), "%s should be matched by range %s", good, versionRangeString)
 		}
 
 		for _, bad := range tests.bad {
 			v, ok := TryParseVersion(bad)
-			assert.Assert(t, ok)
-			assert.Assert(t, !versionRange.Test(&v), "%s should not be matched by range %s", bad, versionRangeString)
+			require.NoError(t, ok)
+			require.True(t, !versionRange.Test(&v), "%s should not be matched by range %s", bad, versionRangeString)
 		}
 	})
 }
@@ -951,9 +951,9 @@ func assertRangeTest(t *testing.T, name string, rangeText string, versionText st
 	t.Run(testName, func(t *testing.T) {
 		t.Parallel()
 		versionRange, ok := TryParseVersionRange(rangeText)
-		assert.Assert(t, ok)
+		require.True(t, ok)
 		version, err := TryParseVersion(versionText)
-		assert.NilError(t, err)
-		assert.Equal(t, versionRange.Test(&version), inRange)
+		require.NoError(t, err)
+		require.Equal(t, versionRange.Test(&version), inRange)
 	})
 }

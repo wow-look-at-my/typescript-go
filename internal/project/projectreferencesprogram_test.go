@@ -13,7 +13,8 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/projecttestutil"
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func TestProjectReferencesProgram(t *testing.T) {
@@ -29,22 +30,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsproto.DocumentUri("file:///user/username/projects/myproject/main/main.ts")
 		session.DidOpenFile(context.Background(), uri, 1, files["/user/username/projects/myproject/main/main.ts"].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		file := p.Program.GetSourceFileByPath(tspath.Path("/user/username/projects/myproject/dependency/fns.ts"))
-		assert.Assert(t, file != nil)
+		require.True(t, file != nil)
 		dtsFile := p.Program.GetSourceFileByPath(tspath.Path("/user/username/projects/myproject/decls/fns.d.ts"))
-		assert.Assert(t, dtsFile == nil)
+		require.True(t, dtsFile == nil)
 	})
 
 	t.Run("program with disableSourceOfProjectReferenceRedirect", func(t *testing.T) {
@@ -60,22 +61,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsproto.DocumentUri("file:///user/username/projects/myproject/main/main.ts")
 		session.DidOpenFile(context.Background(), uri, 1, files["/user/username/projects/myproject/main/main.ts"].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		file := p.Program.GetSourceFileByPath(tspath.Path("/user/username/projects/myproject/dependency/fns.ts"))
-		assert.Assert(t, file == nil)
+		require.True(t, file == nil)
 		dtsFile := p.Program.GetSourceFileByPath(tspath.Path("/user/username/projects/myproject/decls/fns.d.ts"))
-		assert.Assert(t, dtsFile != nil)
+		require.True(t, dtsFile != nil)
 	})
 
 	t.Run("references through symlink with index and typings", func(t *testing.T) {
@@ -84,22 +85,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink with index and typings with preserveSymlinks", func(t *testing.T) {
@@ -108,22 +109,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink with index and typings scoped package", func(t *testing.T) {
@@ -132,22 +133,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink with index and typings with scoped package preserveSymlinks", func(t *testing.T) {
@@ -156,22 +157,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink referencing from subFolder", func(t *testing.T) {
@@ -180,22 +181,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink referencing from subFolder with preserveSymlinks", func(t *testing.T) {
@@ -204,22 +205,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink referencing from subFolder scoped package", func(t *testing.T) {
@@ -228,22 +229,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("references through symlink referencing from subFolder with scoped package preserveSymlinks", func(t *testing.T) {
@@ -252,22 +253,22 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session, _ := projecttestutil.Setup(files)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 0)
 
 		uri := lsconv.FileNameToDocumentURI(aTest)
 		session.DidOpenFile(context.Background(), uri, 1, files[aTest].(string), lsproto.LanguageKindTypeScript)
 
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		projects := snapshot.ProjectCollection.Projects()
 		p := projects[0]
-		assert.Equal(t, p.Kind, project.KindConfigured)
+		require.Equal(t, p.Kind, project.KindConfigured)
 
 		fooFile := p.Program.GetSourceFile(bFoo)
-		assert.Assert(t, fooFile != nil)
+		require.True(t, fooFile != nil)
 		barFile := p.Program.GetSourceFile(bBar)
-		assert.Assert(t, barFile != nil)
+		require.True(t, barFile != nil)
 	})
 
 	t.Run("when new file is added to referenced project", func(t *testing.T) {
@@ -278,24 +279,24 @@ func TestProjectReferencesProgram(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, files["/user/username/projects/myproject/main/main.ts"].(string), lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		programBefore := snapshot.ProjectCollection.Projects()[0].Program
 
 		err := utils.FS().WriteFile("/user/username/projects/myproject/dependency/fns2.ts", `export const x = 2;`, false)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		session.DidChangeWatchedFiles(context.Background(), []*lsproto.FileEvent{
 			{
-				Type: lsproto.FileChangeTypeCreated,
-				Uri:  "file:///user/username/projects/myproject/dependency/fns2.ts",
+				Type:	lsproto.FileChangeTypeCreated,
+				Uri:	"file:///user/username/projects/myproject/dependency/fns2.ts",
 			},
 		})
 
 		_, err = session.GetLanguageService(context.Background(), uri)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Check(t, snapshot.ProjectCollection.Projects()[0].Program != programBefore)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		assert.True(t, snapshot.ProjectCollection.Projects()[0].Program != programBefore)
 	})
 }
 
@@ -352,9 +353,9 @@ func filesForSymlinkReferences(preserveSymlinks bool, scope string) (files map[s
 			foo();
 			bar();
 		`, scope, scope),
-		bFoo: `export function foo() { }`,
-		bBar: `export function bar() { }`,
-		fmt.Sprintf(`/user/username/projects/myproject/node_modules/%sb`, scope): vfstest.Symlink("/user/username/projects/myproject/packages/B"),
+		bFoo:	`export function foo() { }`,
+		bBar:	`export function bar() { }`,
+		fmt.Sprintf(`/user/username/projects/myproject/node_modules/%sb`, scope):	vfstest.Symlink("/user/username/projects/myproject/packages/B"),
 	}
 	addConfigForPackage(files, "A", preserveSymlinks, []string{"../B"})
 	addConfigForPackage(files, "B", preserveSymlinks, nil)
@@ -366,16 +367,16 @@ func filesForSymlinkReferencesInSubfolder(preserveSymlinks bool, scope string) (
 	bFoo = "/user/username/projects/myproject/packages/B/src/foo.ts"
 	bBar = "/user/username/projects/myproject/packages/B/src/bar/foo.ts"
 	files = map[string]any{
-		"/user/username/projects/myproject/packages/B/package.json": `{}`,
+		"/user/username/projects/myproject/packages/B/package.json":	`{}`,
 		"/user/username/projects/myproject/packages/A/src/test.ts": fmt.Sprintf(`
 			import { foo } from '%sb/lib/foo';
 			import { bar } from '%sb/lib/bar/foo';
 			foo();
 			bar();
 		`, scope, scope),
-		bFoo: `export function foo() { }`,
-		bBar: `export function bar() { }`,
-		fmt.Sprintf(`/user/username/projects/myproject/node_modules/%sb`, scope): vfstest.Symlink("/user/username/projects/myproject/packages/B"),
+		bFoo:	`export function foo() { }`,
+		bBar:	`export function bar() { }`,
+		fmt.Sprintf(`/user/username/projects/myproject/node_modules/%sb`, scope):	vfstest.Symlink("/user/username/projects/myproject/packages/B"),
 	}
 	addConfigForPackage(files, "A", preserveSymlinks, []string{"../B"})
 	addConfigForPackage(files, "B", preserveSymlinks, nil)
@@ -384,9 +385,9 @@ func filesForSymlinkReferencesInSubfolder(preserveSymlinks bool, scope string) (
 
 func addConfigForPackage(files map[string]any, packageName string, preserveSymlinks bool, references []string) {
 	compilerOptions := map[string]any{
-		"outDir":    "lib",
-		"rootDir":   "src",
-		"composite": true,
+		"outDir":	"lib",
+		"rootDir":	"src",
+		"composite":	true,
 	}
 	if preserveSymlinks {
 		compilerOptions["preserveSymlinks"] = true
@@ -398,8 +399,8 @@ func addConfigForPackage(files map[string]any, packageName string, preserveSymli
 		})
 	}
 	files[fmt.Sprintf("/user/username/projects/myproject/packages/%s/tsconfig.json", packageName)] = core.Must(core.StringifyJson(map[string]any{
-		"compilerOptions": compilerOptions,
-		"include":         []string{"src"},
-		"references":      referencesToAdd,
+		"compilerOptions":	compilerOptions,
+		"include":		[]string{"src"},
+		"references":		referencesToAdd,
 	}, "    ", "  "))
 }

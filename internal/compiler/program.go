@@ -666,8 +666,8 @@ func (p *Program) verifyCompilerOptions() {
 		createRemovedOptionDiagnostic("baseUrl", "", useInstead)
 	}
 
-	if options.OutFile != "" {
-		createRemovedOptionDiagnostic("outFile", "", "")
+	if options.OutFile != "" && options.Module != core.ModuleKindNone {
+		createDiagnosticForOptionName(diagnostics.Option_0_cannot_be_specified_with_option_1, "outFile", "module")
 	}
 
 	if options.Target == core.ScriptTargetES5 {
@@ -1419,6 +1419,11 @@ func (p *Program) Emit(ctx context.Context, options EmitOptions) *EmitResult {
 		}
 	}
 
+	// Bundle emit path: concatenate all source files into a single output file
+	if p.Options().OutFile != "" && options.TargetSourceFile == nil {
+		return p.emitBundled(ctx, options)
+	}
+
 	newLine := p.Options().NewLine.GetNewLineCharacter()
 	writerPool := &sync.Pool{
 		New: func() any {
@@ -1464,6 +1469,37 @@ func (p *Program) Emit(ctx context.Context, options EmitOptions) *EmitResult {
 	return CombineEmitResults(core.Map(emitters, func(e *emitter) *EmitResult {
 		return &e.emitResult
 	}))
+}
+
+func (p *Program) emitBundled(ctx context.Context, options EmitOptions) *EmitResult {
+	compilerOptions := p.Options()
+	paths := outputpaths.GetBundleOutputPaths(compilerOptions)
+	sourceFiles := p.getSourceFilesToEmit(nil, options.EmitOnly == EmitOnlyForcedDts)
+
+	// We need an emit host for the first source file (or any file) to access program-level services.
+	// For bundled emit, we create a host from the first source file.
+	if len(sourceFiles) == 0 {
+		return &EmitResult{}
+	}
+
+	host, done := newEmitHost(ctx, p, sourceFiles[0])
+	defer done()
+
+	newLine := compilerOptions.NewLine.GetNewLineCharacter()
+	writer := printer.NewTextWriter(newLine, 0)
+
+	be := &bundleEmitter{
+		host:          host,
+		emitOnly:      options.EmitOnly,
+		writer:        writer,
+		outFilePath:   paths.JsFilePath(),
+		sourceMapFilePath: paths.SourceMapFilePath(),
+		writeFile:     options.WriteFile,
+	}
+
+	be.emitBundledJS(sourceFiles)
+
+	return &be.emitResult
 }
 
 func CombineEmitResults(results []*EmitResult) *EmitResult {

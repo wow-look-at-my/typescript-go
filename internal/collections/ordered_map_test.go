@@ -7,7 +7,7 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/collections"
 	"github.com/microsoft/typescript-go/internal/json"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestOrderedMap(t *testing.T) {
@@ -15,12 +15,12 @@ func TestOrderedMap(t *testing.T) {
 
 	var m collections.OrderedMap[int, string]
 
-	assert.Assert(t, !m.Has(1))
+	require.True(t, !m.Has(1))
 
 	const (
-		N     = 1000
-		start = 1
-		end   = start + N
+		N	= 1000
+		start	= 1
+		end	= start + N
 	)
 
 	// Seed the map with ascending keys and values for easier testing.
@@ -28,46 +28,46 @@ func TestOrderedMap(t *testing.T) {
 		m.Set(i, padInt(i))
 	}
 
-	assert.Equal(t, m.Size(), N)
+	require.Equal(t, m.Size(), N)
 
 	// Attempt to overwrite existing keys in reverse order.
 	for i := end - 1; i >= start; i-- {
 		m.Set(i, padInt(i))
 	}
 
-	assert.Equal(t, m.Size(), N)
+	require.Equal(t, m.Size(), N)
 
 	for i := start; i < end; i++ {
 		v, ok := m.Get(i)
-		assert.Assert(t, ok)
-		assert.Equal(t, v, padInt(i))
+		require.True(t, ok)
+		require.Equal(t, v, padInt(i))
 	}
 
 	for k, v := range m.Entries() {
-		assert.Equal(t, v, padInt(k))
+		require.Equal(t, v, padInt(k))
 	}
 
 	keys := slices.Collect(m.Keys())
-	assert.Equal(t, len(keys), N)
-	assert.Assert(t, slices.IsSorted(keys))
+	require.Equal(t, len(keys), N)
+	require.True(t, slices.IsSorted(keys))
 
 	values := slices.Collect(m.Values())
-	assert.Equal(t, len(values), N)
-	assert.Assert(t, slices.IsSorted(values))
+	require.Equal(t, len(values), N)
+	require.True(t, slices.IsSorted(values))
 
 	var firstKey int
 	for k := range m.Keys() {
 		firstKey = k
 		break
 	}
-	assert.Equal(t, firstKey, start)
+	require.Equal(t, firstKey, start)
 
 	var firstValue string
 	for v := range m.Values() {
 		firstValue = v
 		break
 	}
-	assert.Equal(t, firstValue, padInt(start))
+	require.Equal(t, firstValue, padInt(start))
 
 	for k, v := range m.Entries() {
 		firstKey = k
@@ -75,32 +75,32 @@ func TestOrderedMap(t *testing.T) {
 		break
 	}
 
-	assert.Equal(t, firstKey, start)
-	assert.Equal(t, firstValue, padInt(start))
+	require.Equal(t, firstKey, start)
+	require.Equal(t, firstValue, padInt(start))
 
 	for i := start + 1; i < end; i++ {
 		v, ok := m.Delete(i)
-		assert.Assert(t, ok)
-		assert.Equal(t, v, padInt(i))
-		assert.Assert(t, !m.Has(i))
+		require.True(t, ok)
+		require.Equal(t, v, padInt(i))
+		require.True(t, !m.Has(i))
 
 		v, ok = m.Get(i)
-		assert.Assert(t, !ok)
-		assert.Equal(t, v, "")
+		require.True(t, !ok)
+		require.Equal(t, v, "")
 
 		v, ok = m.Delete(i)
-		assert.Assert(t, !ok)
-		assert.Equal(t, v, "")
+		require.True(t, !ok)
+		require.Equal(t, v, "")
 	}
 
-	assert.Equal(t, m.Size(), 1)
-	assert.Assert(t, m.Has(start))
+	require.Equal(t, m.Size(), 1)
+	require.True(t, m.Has(start))
 
 	v, ok := m.Delete(start)
-	assert.Assert(t, ok)
-	assert.Equal(t, v, padInt(start))
+	require.True(t, ok)
+	require.Equal(t, v, padInt(start))
 
-	assert.Equal(t, m.Size(), 0)
+	require.Equal(t, m.Size(), 0)
 }
 
 func TestOrderedMapClone(t *testing.T) {
@@ -112,21 +112,21 @@ func TestOrderedMapClone(t *testing.T) {
 
 	clone := m.Clone()
 
-	assert.Assert(t, clone != m)
-	assert.Equal(t, clone.Size(), 2)
-	assert.DeepEqual(t, slices.Collect(clone.Keys()), []int{1, 2})
-	assert.DeepEqual(t, slices.Collect(clone.Values()), []string{"one", "two"})
+	require.True(t, clone != m)
+	require.Equal(t, clone.Size(), 2)
+	require.Equal(t, slices.Collect(clone.Keys()), []int{1, 2})
+	require.Equal(t, slices.Collect(clone.Values()), []string{"one", "two"})
 
 	v, ok := clone.Get(1)
-	assert.Assert(t, ok)
-	assert.Equal(t, v, "one")
+	require.True(t, ok)
+	require.Equal(t, v, "one")
 
 	m.Delete(1)
 
-	assert.Equal(t, m.Size(), 1)
-	assert.Equal(t, clone.Size(), 2)
-	assert.DeepEqual(t, slices.Collect(clone.Keys()), []int{1, 2})
-	assert.DeepEqual(t, slices.Collect(clone.Values()), []string{"one", "two"})
+	require.Equal(t, m.Size(), 1)
+	require.Equal(t, clone.Size(), 2)
+	require.Equal(t, slices.Collect(clone.Keys()), []int{1, 2})
+	require.Equal(t, slices.Collect(clone.Values()), []string{"one", "two"})
 }
 
 func TestOrderedMapClear(t *testing.T) {
@@ -138,14 +138,14 @@ func TestOrderedMapClear(t *testing.T) {
 
 	m.Clear()
 
-	assert.Equal(t, m.Size(), 0)
+	require.Equal(t, m.Size(), 0)
 }
 
 func padInt(n int) string {
 	return fmt.Sprintf("%10d", n)
 }
 
-func TestOrderedMapWithSizeHint(t *testing.T) { //nolint:paralleltest
+func TestOrderedMapWithSizeHint(t *testing.T) {	//nolint:paralleltest
 	const N = 1024
 
 	allocs := testing.AllocsPerRun(10, func() {
@@ -155,7 +155,7 @@ func TestOrderedMapWithSizeHint(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	assert.Assert(t, allocs < 10, "allocs = %v", allocs)
+	require.True(t, allocs < 10, "allocs = %v", allocs)
 }
 
 func TestOrderedMapUnmarshalJSON(t *testing.T) {
@@ -170,18 +170,18 @@ func TestOrderedMapUnmarshalJSON(t *testing.T) {
 func testOrderedMapUnmarshalJSON(t *testing.T, unmarshal func([]byte, any) error) {
 	var m collections.OrderedMap[string, any]
 	err := unmarshal([]byte(`{"a": 1, "b": "two", "c": { "d": 4 } }`), &m)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, m.Size(), 3)
-	assert.Equal(t, m.GetOrZero("a"), float64(1))
+	require.Equal(t, m.Size(), 3)
+	require.Equal(t, m.GetOrZero("a"), float64(1))
 
 	err = unmarshal([]byte(`null`), &m)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	err = unmarshal([]byte(`"foo"`), &m)
-	assert.ErrorContains(t, err, "cannot unmarshal non-object JSON value into Map")
+	require.ErrorContains(t, err, "cannot unmarshal non-object JSON value into Map")
 
 	var invalidMap collections.OrderedMap[int, any]
 	err = unmarshal([]byte(`{"a": 1, "b": "two"}`), &invalidMap)
-	assert.ErrorContains(t, err, "unmarshal")
+	require.ErrorContains(t, err, "unmarshal")
 }

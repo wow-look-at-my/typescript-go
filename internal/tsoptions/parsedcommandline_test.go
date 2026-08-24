@@ -7,7 +7,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/tsoptions"
 	"github.com/microsoft/typescript-go/internal/tsoptions/tsoptionstest"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestParsedCommandLine(t *testing.T) {
@@ -19,29 +19,29 @@ func TestParsedCommandLine(t *testing.T) {
 		noFilesFS := vfstest.FromMap(noFiles, true)
 
 		files := map[string]string{
-			"/dev/a.ts":         "",
-			"/dev/a.d.ts":       "",
-			"/dev/a.js":         "",
-			"/dev/b.ts":         "",
-			"/dev/b.js":         "",
-			"/dev/c.d.ts":       "",
-			"/dev/z/a.ts":       "",
-			"/dev/z/abz.ts":     "",
-			"/dev/z/aba.ts":     "",
-			"/dev/z/b.ts":       "",
-			"/dev/z/bbz.ts":     "",
-			"/dev/z/bba.ts":     "",
-			"/dev/x/a.ts":       "",
-			"/dev/x/aa.ts":      "",
-			"/dev/x/b.ts":       "",
-			"/dev/x/y/a.ts":     "",
-			"/dev/x/y/b.ts":     "",
-			"/dev/js/a.js":      "",
-			"/dev/js/b.js":      "",
-			"/dev/js/d.min.js":  "",
-			"/dev/js/ab.min.js": "",
-			"/ext/ext.ts":       "",
-			"/ext/b/a..b.ts":    "",
+			"/dev/a.ts":		"",
+			"/dev/a.d.ts":		"",
+			"/dev/a.js":		"",
+			"/dev/b.ts":		"",
+			"/dev/b.js":		"",
+			"/dev/c.d.ts":		"",
+			"/dev/z/a.ts":		"",
+			"/dev/z/abz.ts":	"",
+			"/dev/z/aba.ts":	"",
+			"/dev/z/b.ts":		"",
+			"/dev/z/bbz.ts":	"",
+			"/dev/z/bba.ts":	"",
+			"/dev/x/a.ts":		"",
+			"/dev/x/aa.ts":		"",
+			"/dev/x/b.ts":		"",
+			"/dev/x/y/a.ts":	"",
+			"/dev/x/y/b.ts":	"",
+			"/dev/js/a.js":		"",
+			"/dev/js/b.js":		"",
+			"/dev/js/d.min.js":	"",
+			"/dev/js/ab.min.js":	"",
+			"/ext/ext.ts":		"",
+			"/ext/b/a..b.ts":	"",
 		}
 
 		assertMatches := func(t *testing.T, parsedCommandLine *tsoptions.ParsedCommandLine, files map[string]string, matches []string) {
@@ -49,12 +49,12 @@ func TestParsedCommandLine(t *testing.T) {
 			for fileName := range files {
 				actual := parsedCommandLine.PossiblyMatchesFileName(fileName)
 				expected := slices.Contains(matches, fileName)
-				assert.Equal(t, actual, expected, "fileName: %s", fileName)
+				require.Equal(t, actual, expected, "fileName: %s", fileName)
 			}
 			for _, fileName := range matches {
 				if _, ok := files[fileName]; !ok {
 					actual := parsedCommandLine.PossiblyMatchesFileName(fileName)
-					assert.Equal(t, actual, true, "fileName: %s", fileName)
+					require.Equal(t, actual, true, "fileName: %s", fileName)
 				}
 			}
 		}
@@ -128,7 +128,7 @@ func TestParsedCommandLine(t *testing.T) {
 					/*useCaseSensitiveFileNames*/ true,
 				)
 
-				assert.DeepEqual(t, parsedCommandLine.LiteralFileNames(), []string{
+				require.Equal(t, parsedCommandLine.LiteralFileNames(), []string{
 					"/dev/a.ts",
 					"/dev/b.ts",
 				})

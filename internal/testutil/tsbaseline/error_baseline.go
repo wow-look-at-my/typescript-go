@@ -16,8 +16,8 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/baseline"
 	"github.com/microsoft/typescript-go/internal/testutil/harnessutil"
 	"github.com/microsoft/typescript-go/internal/tspath"
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/assert/cmp"
+
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 // IO
@@ -28,8 +28,8 @@ var formatOpts = &diagnosticwriter.FormattingOptions{
 }
 
 var (
-	diagnosticsLocationPrefix  = regexp.MustCompile(`(?im)^(lib.*\.d\.ts)\(\d+,\d+\)`)
-	diagnosticsLocationPattern = regexp.MustCompile(`(?i)(lib.*\.d\.ts):\d+:\d+`)
+	diagnosticsLocationPrefix	= regexp.MustCompile(`(?im)^(lib.*\.d\.ts)\(\d+,\d+\)`)
+	diagnosticsLocationPattern	= regexp.MustCompile(`(?i)(lib.*\.d\.ts):\d+:\d+`)
 )
 
 func DoErrorBaseline(t *testing.T, baselinePath string, inputFiles []*harnessutil.TestFile, errors []*ast.Diagnostic, pretty bool, opts baseline.Options) {
@@ -220,7 +220,7 @@ func iterateErrorBaseline[T diagnosticwriter.Diagnostic](t *testing.T, inputFile
 		}
 
 		// Verify we didn't miss any errors in this file
-		assert.Check(t, cmp.Equal(markedErrorCount, len(fileErrors)), "count of errors in "+inputFile.UnitName)
+		assert.Equal(t, markedErrorCount, len(fileErrors), "count of errors in "+inputFile.UnitName)
 		_, isDupe := dupeCase[sanitizeTestFilePath(inputFile.UnitName)]
 		result = append(result, outputLines.String())
 		if isDupe {
@@ -244,7 +244,7 @@ func iterateErrorBaseline[T diagnosticwriter.Diagnostic](t *testing.T, inputFile
 			return d.File() != nil && isTsConfigFile(d.File().FileName())
 		})
 	// Verify we didn't miss any errors in total
-	assert.Check(t, cmp.Equal(totalErrorsReportedInNonLibraryNonTsconfigFiles+numLibraryDiagnostics+numTsconfigDiagnostics, len(diagnostics)), "total number of errors")
+	assert.Equal(t, totalErrorsReportedInNonLibraryNonTsconfigFiles+numLibraryDiagnostics+numTsconfigDiagnostics, len(diagnostics), "total number of errors")
 
 	return result
 }

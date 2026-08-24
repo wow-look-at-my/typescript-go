@@ -20,24 +20,24 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/lsptestutil"
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/iovfs"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 type stateBaseline struct {
-	baseline      strings.Builder
-	fsDiffer      *fsbaselineutil.FSDiffer
-	isInitialized bool
+	baseline	strings.Builder
+	fsDiffer	*fsbaselineutil.FSDiffer
+	isInitialized	bool
 
-	serializedProjects           map[string]projectInfo
-	serializedOpenFiles          map[string]*openFileInfo
-	serializedConfigFileRegistry *project.ConfigFileRegistry
+	serializedProjects		map[string]projectInfo
+	serializedOpenFiles		map[string]*openFileInfo
+	serializedConfigFileRegistry	*project.ConfigFileRegistry
 }
 
 func newStateBaseline(fsFromMap iovfs.FsWithSys) *stateBaseline {
 	stateBaseline := &stateBaseline{
 		fsDiffer: &fsbaselineutil.FSDiffer{
-			FS:           fsFromMap,
-			WrittenFiles: &collections.SyncSet[string]{},
+			FS:		fsFromMap,
+			WrittenFiles:	&collections.SyncSet[string]{},
 		},
 	}
 	fmt.Fprintf(&stateBaseline.baseline, "UseCaseSensitiveFileNames: %v\n", fsFromMap.UseCaseSensitiveFileNames())
@@ -46,8 +46,8 @@ func newStateBaseline(fsFromMap iovfs.FsWithSys) *stateBaseline {
 }
 
 type requestOrMessage struct {
-	Method lsproto.Method `json:"method"`
-	Params any            `json:"params,omitzero"`
+	Method	lsproto.Method	`json:"method"`
+	Params	any		`json:"params,omitzero"`
 }
 
 func (f *FourslashTest) baselineRequestOrNotification(t *testing.T, method lsproto.Method, params any) {
@@ -73,11 +73,11 @@ func (f *FourslashTest) baselineProjectsAfterNotification(t *testing.T, fileName
 			Uri: lsconv.FileNameToDocumentURI(fileName),
 		},
 		Position: lsproto.Position{
-			Line:      uint32(0),
-			Character: uint32(0),
+			Line:		uint32(0),
+			Character:	uint32(0),
 		},
 	})
-	assert.Assert(t, resultOk)
+	require.True(t, resultOk)
 	f.baselineState(t)
 }
 
@@ -111,18 +111,18 @@ func (f *FourslashTest) serializedState(t *testing.T) string {
 type projectInfo = *compiler.Program
 
 type openFileInfo struct {
-	defaultProjectName string
-	allProjects        []string
+	defaultProjectName	string
+	allProjects		[]string
 }
 
 type diffTableOptions struct {
-	indent   string
-	sortKeys bool
+	indent		string
+	sortKeys	bool
 }
 
 type diffTable struct {
-	diff    collections.OrderedMap[string, string]
-	options diffTableOptions
+	diff	collections.OrderedMap[string, string]
+	options	diffTableOptions
 }
 
 func (d *diffTable) add(key, value string) {
@@ -155,9 +155,9 @@ func (d *diffTable) print(w io.Writer, header string) {
 }
 
 type diffTableWriter struct {
-	hasChange bool
-	header    string
-	diffs     map[string]func(io.Writer)
+	hasChange	bool
+	header		string
+	diffs		map[string]func(io.Writer)
 }
 
 func newDiffTableWriter(header string) *diffTableWriter {

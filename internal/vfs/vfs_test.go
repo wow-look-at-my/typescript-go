@@ -9,14 +9,14 @@ import (
 	"github.com/microsoft/typescript-go/internal/vfs"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func BenchmarkReadFile(b *testing.B) {
 	type bench struct {
-		name string
-		fs   vfs.FS
-		path string
+		name	string
+		fs	vfs.FS
+		path	string
 	}
 
 	osFS := osvfs.FS()
@@ -25,7 +25,7 @@ func BenchmarkReadFile(b *testing.B) {
 	tmpdir := tspath.NormalizeSlashes(b.TempDir())
 	osSmallDataPath := tspath.CombinePaths(tmpdir, "foo.ts")
 	err := osFS.WriteFile(osSmallDataPath, smallData, false)
-	assert.NilError(b, err)
+	require.NoError(b, err)
 
 	tests := []bench{
 		{"MapFS small", vfstest.FromMap(fstest.MapFS{
@@ -40,7 +40,7 @@ func BenchmarkReadFile(b *testing.B) {
 		checkerPath := tspath.CombinePaths(tspath.NormalizeSlashes(repo.TypeScriptSubmodulePath()), "src", "compiler", "checker.ts")
 
 		checkerContents, ok := osFS.ReadFile(checkerPath)
-		assert.Assert(b, ok)
+		require.True(b, ok)
 
 		tests = append(tests, bench{
 			"MapFS checker.ts",

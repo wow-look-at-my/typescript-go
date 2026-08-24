@@ -13,7 +13,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/parser"
 	"github.com/microsoft/typescript-go/internal/printer"
 	"github.com/microsoft/typescript-go/internal/repo"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func applyBulkEdits(text string, edits []core.TextChange) string {
@@ -41,75 +41,75 @@ func TestFormat(t *testing.T) {
 		t.Parallel()
 		ctx := format.WithFormatCodeSettings(t.Context(), &lsutil.FormatCodeSettings{
 			EditorSettings: lsutil.EditorSettings{
-				TabSize:                4,
-				IndentSize:             4,
-				BaseIndentSize:         4,
-				NewLineCharacter:       "\n",
-				ConvertTabsToSpaces:    true,
-				IndentStyle:            lsutil.IndentStyleSmart,
-				TrimTrailingWhitespace: true,
+				TabSize:		4,
+				IndentSize:		4,
+				BaseIndentSize:		4,
+				NewLineCharacter:	"\n",
+				ConvertTabsToSpaces:	true,
+				IndentStyle:		lsutil.IndentStyleSmart,
+				TrimTrailingWhitespace:	true,
 			},
-			InsertSpaceBeforeTypeAnnotation: core.TSTrue,
+			InsertSpaceBeforeTypeAnnotation:	core.TSTrue,
 		}, "\n")
 		repo.SkipIfNoTypeScriptSubmodule(t)
 		filePath := filepath.Join(repo.TypeScriptSubmodulePath(), "src/compiler/checker.ts")
 		fileContent, err := os.ReadFile(filePath)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		text := string(fileContent)
 		sourceFile := parser.ParseSourceFile(ast.SourceFileParseOptions{
-			FileName: "/checker.ts",
-			Path:     "/checker.ts",
+			FileName:	"/checker.ts",
+			Path:		"/checker.ts",
 		}, text, core.ScriptKindTS)
 		edits := format.FormatDocument(ctx, sourceFile)
 		newText := applyBulkEdits(text, edits)
-		assert.Assert(t, len(newText) > 0)
-		assert.Assert(t, text != newText)
+		require.True(t, len(newText) > 0)
+		require.True(t, text != newText)
 	})
 }
 
 func BenchmarkFormat(b *testing.B) {
 	ctx := format.WithFormatCodeSettings(b.Context(), &lsutil.FormatCodeSettings{
 		EditorSettings: lsutil.EditorSettings{
-			TabSize:                4,
-			IndentSize:             4,
-			BaseIndentSize:         4,
-			NewLineCharacter:       "\n",
-			ConvertTabsToSpaces:    true,
-			IndentStyle:            lsutil.IndentStyleSmart,
-			TrimTrailingWhitespace: true,
+			TabSize:		4,
+			IndentSize:		4,
+			BaseIndentSize:		4,
+			NewLineCharacter:	"\n",
+			ConvertTabsToSpaces:	true,
+			IndentStyle:		lsutil.IndentStyleSmart,
+			TrimTrailingWhitespace:	true,
 		},
-		InsertSpaceBeforeTypeAnnotation: core.TSTrue,
+		InsertSpaceBeforeTypeAnnotation:	core.TSTrue,
 	}, "\n")
 	repo.SkipIfNoTypeScriptSubmodule(b)
 	filePath := filepath.Join(repo.TypeScriptSubmodulePath(), "src/compiler/checker.ts")
 	fileContent, err := os.ReadFile(filePath)
-	assert.NilError(b, err)
+	require.NoError(b, err)
 	text := string(fileContent)
 	sourceFile := parser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: "/checker.ts",
-		Path:     "/checker.ts",
+		FileName:	"/checker.ts",
+		Path:		"/checker.ts",
 	}, text, core.ScriptKindTS)
 
 	b.Run("format checker.ts", func(b *testing.B) {
 		for b.Loop() {
 			edits := format.FormatDocument(ctx, sourceFile)
 			newText := applyBulkEdits(text, edits)
-			assert.Assert(b, len(newText) > 0)
+			require.True(b, len(newText) > 0)
 		}
 	})
 
-	b.Run("format checker.ts (no edit application)", func(b *testing.B) { // for comparison (how long does applying many edits take?)
+	b.Run("format checker.ts (no edit application)", func(b *testing.B) {	// for comparison (how long does applying many edits take?)
 		for b.Loop() {
 			edits := format.FormatDocument(ctx, sourceFile)
-			assert.Assert(b, len(edits) > 0)
+			require.True(b, len(edits) > 0)
 		}
 	})
 
 	p := printer.NewPrinter(printer.PrinterOptions{}, printer.PrintHandlers{}, printer.NewEmitContext())
-	b.Run("pretty print checker.ts", func(b *testing.B) { // for comparison
+	b.Run("pretty print checker.ts", func(b *testing.B) {	// for comparison
 		for b.Loop() {
 			newText := p.EmitSourceFile(sourceFile)
-			assert.Assert(b, len(newText) > 0)
+			require.True(b, len(newText) > 0)
 		}
 	})
 }

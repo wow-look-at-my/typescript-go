@@ -13,7 +13,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/project"
 	"github.com/microsoft/typescript-go/internal/testutil/projecttestutil"
 	"github.com/microsoft/typescript-go/internal/tspath"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestProjectCollectionBuilder(t *testing.T) {
@@ -34,19 +34,19 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json")) != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json")) != nil)
 
 		// Ensure request can use existing snapshot
 		_, err := session.GetLanguageService(context.Background(), uri)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		requestSnapshot, requestRelease := session.Snapshot()
 		defer requestRelease()
-		assert.Equal(t, requestSnapshot, snapshot)
+		require.Equal(t, requestSnapshot, snapshot)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "direct reference should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "direct reference should be present")
 
 		// Close the file and open one in an inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -54,12 +54,12 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should have been released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
 	})
 
 	t.Run("when project found is solution referencing default project indirectly", func(t *testing.T) {
@@ -75,18 +75,18 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		srcProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json"))
-		assert.Assert(t, srcProject != nil)
+		require.True(t, srcProject != nil)
 
 		// Verify the default project is the source project
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Equal(t, defaultProject, srcProject)
+		require.Equal(t, defaultProject, srcProject)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") != nil, "direct reference should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "indirect reference should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") != nil, "direct reference should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "indirect reference should be present")
 
 		// Close the file and open one in an inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -94,14 +94,14 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect2.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect2.json") == nil)
 	})
 
 	t.Run("when project found is solution with disableReferencedProjectLoad referencing default project directly", func(t *testing.T) {
@@ -115,17 +115,17 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json")) == nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json")) == nil)
 
 		// Should use inferred project instead
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Assert(t, defaultProject != nil)
-		assert.Equal(t, defaultProject.Kind, project.KindInferred)
+		require.True(t, defaultProject != nil)
+		require.Equal(t, defaultProject.Kind, project.KindInferred)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil, "direct reference should not be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil, "direct reference should not be present")
 
 		// Close the file and open another one in the inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -133,12 +133,12 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
 	})
 
 	t.Run("when project found is solution referencing default project indirectly through disableReferencedProjectLoad", func(t *testing.T) {
@@ -153,18 +153,18 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json")) == nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json")) == nil)
 
 		// Should use inferred project instead
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Assert(t, defaultProject != nil)
-		assert.Equal(t, defaultProject.Kind, project.KindInferred)
+		require.True(t, defaultProject != nil)
+		require.Equal(t, defaultProject.Kind, project.KindInferred)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") != nil, "solution direct reference should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil, "indirect reference should not be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") != nil, "solution direct reference should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil, "indirect reference should not be present")
 
 		// Close the file and open another one in the inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -172,13 +172,13 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") == nil)
 	})
 
 	t.Run("when project found is solution referencing default project indirectly through disableReferencedProjectLoad in one but without it in another", func(t *testing.T) {
@@ -194,19 +194,19 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		srcProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json"))
-		assert.Assert(t, srcProject != nil)
+		require.True(t, srcProject != nil)
 
 		// Verify the default project is the source project (found through indirect2, not indirect1)
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Equal(t, defaultProject, srcProject)
+		require.Equal(t, defaultProject, srcProject)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") != nil, "direct reference 1 should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect2.json") != nil, "direct reference 2 should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "indirect reference should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") != nil, "direct reference 1 should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect2.json") != nil, "direct reference 2 should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "indirect reference should be present")
 
 		// Close the file and open another one in the inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -214,14 +214,14 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect2.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect1.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-indirect2.json") == nil)
 	})
 
 	t.Run("when project found is project with own files referencing the file from referenced project", func(t *testing.T) {
@@ -240,19 +240,19 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 2)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 2)
 		srcProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig-src.json"))
-		assert.Assert(t, srcProject != nil)
+		require.True(t, srcProject != nil)
 		ancestorProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/user/username/projects/myproject/tsconfig.json"))
-		assert.Assert(t, ancestorProject != nil)
+		require.True(t, ancestorProject != nil)
 
 		// Verify the default project is the source project
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Equal(t, defaultProject, srcProject)
+		require.Equal(t, defaultProject, srcProject)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "direct reference should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") != nil, "direct reference should be present")
 
 		// Close the file and open another one in the inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -260,12 +260,12 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/user/username/projects/myproject/tsconfig-src.json") == nil)
 	})
 
 	t.Run("when file is not part of first config tree found, looks into ancestor folder and its references to find default project", func(t *testing.T) {
@@ -277,7 +277,7 @@ func TestProjectCollectionBuilder(t *testing.T) {
                     helpers;
                 }
             `,
-			"/home/src/projects/project/app/Component.ts": `export const Component = () => {}`,
+			"/home/src/projects/project/app/Component.ts":	`export const Component = () => {}`,
 			"/home/src/projects/project/app/tsconfig.json": `{
 				"compilerOptions": {
 					"composite": true,
@@ -286,7 +286,7 @@ func TestProjectCollectionBuilder(t *testing.T) {
 				"include": ["**/*"],
 				"exclude": ["**/*-demos.*"],
 			}`,
-			"/home/src/projects/project/demos/helpers.ts": "export const foo = 1;",
+			"/home/src/projects/project/demos/helpers.ts":	"export const foo = 1;",
 			"/home/src/projects/project/demos/tsconfig.json": `{
 				"compilerOptions": {
 					"composite": true,
@@ -320,20 +320,20 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 2)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 2)
 		demoProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/home/src/projects/project/demos/tsconfig.json"))
-		assert.Assert(t, demoProject != nil)
+		require.True(t, demoProject != nil)
 		solutionProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/home/src/projects/project/tsconfig.json"))
-		assert.Assert(t, solutionProject != nil)
+		require.True(t, solutionProject != nil)
 
 		// Verify the default project is the demos project (not the app project that excludes demos files)
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Equal(t, defaultProject, demoProject)
+		require.Equal(t, defaultProject, demoProject)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/app/tsconfig.json") != nil, "app config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/demos/tsconfig.json") != nil, "demos config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") != nil, "solution config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/app/tsconfig.json") != nil, "app config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/demos/tsconfig.json") != nil, "demos config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") != nil, "solution config should be present")
 
 		// Close the file and open another one in the inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -341,13 +341,13 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/app/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/demos/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/app/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/demos/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") == nil)
 	})
 
 	t.Run("when dts file is next to ts file and included as root in referenced project", func(t *testing.T) {
@@ -361,7 +361,7 @@ func TestProjectCollectionBuilder(t *testing.T) {
                     }
                 }
             `,
-			"/home/src/projects/project/src/index.ts": `const api = {}`,
+			"/home/src/projects/project/src/index.ts":	`const api = {}`,
 			"/home/src/projects/project/tsconfig.json": `{
 				"include": [
 					"src/*.d.ts",
@@ -383,18 +383,18 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), uri, 1, content, lsproto.LanguageKindTypeScript)
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 2)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 2)
 		rootProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/home/src/projects/project/tsconfig.json"))
-		assert.Assert(t, rootProject != nil)
+		require.True(t, rootProject != nil)
 
 		// Verify the default project is inferred
 		defaultProject := snapshot.GetDefaultProject(uri)
-		assert.Assert(t, defaultProject != nil)
-		assert.Equal(t, defaultProject.Kind, project.KindInferred)
+		require.True(t, defaultProject != nil)
+		require.Equal(t, defaultProject.Kind, project.KindInferred)
 
 		// Searched configs should be present while file is open
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") != nil, "root config should be present")
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.node.json") != nil, "node config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") != nil, "root config should be present")
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.node.json") != nil, "node config should be present")
 
 		// Close the file and open another one in the inferred project
 		session.DidCloseFile(context.Background(), uri)
@@ -402,12 +402,12 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		session.DidOpenFile(context.Background(), dummyUri, 1, "const x = 1;", lsproto.LanguageKindTypeScript)
 		snapshot, release = session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
-		assert.Assert(t, snapshot.ProjectCollection.InferredProject() != nil)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.True(t, snapshot.ProjectCollection.InferredProject() != nil)
 
 		// Config files should be released
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") == nil)
-		assert.Assert(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.node.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.json") == nil)
+		require.True(t, snapshot.ConfigFileRegistry.GetConfig("/home/src/projects/project/tsconfig.node.json") == nil)
 	})
 
 	t.Run("#1630", func(t *testing.T) {
@@ -416,8 +416,8 @@ func TestProjectCollectionBuilder(t *testing.T) {
 			"/project/lib/tsconfig.json": `{
 				"files": ["a.ts"]
 			}`,
-			"/project/lib/a.ts": `export const a = 1;`,
-			"/project/lib/b.ts": `export const b = 1;`,
+			"/project/lib/a.ts":	`export const a = 1;`,
+			"/project/lib/b.ts":	`export const b = 1;`,
 			"/project/tsconfig.json": `{
 				"files": [],
 				"references": [{ "path": "./lib" }],
@@ -425,7 +425,7 @@ func TestProjectCollectionBuilder(t *testing.T) {
 					"disableReferencedProjectLoad": true
 				}
 			}`,
-			"/project/index.ts": ``,
+			"/project/index.ts":	``,
 		}
 
 		session, _ := projecttestutil.Setup(files)
@@ -445,9 +445,9 @@ func TestProjectCollectionBuilder(t *testing.T) {
 	t.Run("inferred project root files are in stable order", func(t *testing.T) {
 		t.Parallel()
 		files := map[string]any{
-			"/project/a.ts": `export const a = 1;`,
-			"/project/b.ts": `export const b = 1;`,
-			"/project/c.ts": `export const c = 1;`,
+			"/project/a.ts":	`export const a = 1;`,
+			"/project/b.ts":	`export const b = 1;`,
+			"/project/c.ts":	`export const c = 1;`,
 		}
 
 		session, _ := projecttestutil.Setup(files)
@@ -459,13 +459,13 @@ func TestProjectCollectionBuilder(t *testing.T) {
 
 		snapshot, release := session.Snapshot()
 		defer release()
-		assert.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
+		require.Equal(t, len(snapshot.ProjectCollection.Projects()), 1)
 		inferredProject := snapshot.ProjectCollection.InferredProject()
-		assert.Assert(t, inferredProject != nil)
+		require.True(t, inferredProject != nil)
 		// It's more bookkeeping to maintain order of opening, since any file can move into or out of
 		// the inferred project due to changes in other projects. Order shouldn't matter for correctness,
 		// we just want it to be consistent, in case there are observable type ordering issues.
-		assert.DeepEqual(t, inferredProject.Program.CommandLine().FileNames(), []string{
+		require.Equal(t, inferredProject.Program.CommandLine().FileNames(), []string{
 			"/project/a.ts",
 			"/project/b.ts",
 			"/project/c.ts",
@@ -508,7 +508,7 @@ func TestProjectCollectionBuilder(t *testing.T) {
 					},
 				]
 			}`,
-			"/script.ts": `export const a = 1;`,
+			"/script.ts":	`export const a = 1;`,
 		}
 		session, _ := projecttestutil.Setup(files)
 		session.DidOpenFile(context.Background(), "file:///script.ts", 1, files["/script.ts"].(string), lsproto.LanguageKindTypeScript)
@@ -521,9 +521,9 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		// is deleted from the project root, requesting language service for the dependency
 		// correctly moves it to an inferred project.
 		files := map[string]any{
-			"/project/tsconfig.json":               `{"compilerOptions": {"strict": true}}`,
-			"/project/index.ts":                    `import { helper } from "./node_modules/dep/index";`,
-			"/project/node_modules/dep/index.d.ts": `export declare function helper(): void;`,
+			"/project/tsconfig.json":		`{"compilerOptions": {"strict": true}}`,
+			"/project/index.ts":			`import { helper } from "./node_modules/dep/index";`,
+			"/project/node_modules/dep/index.d.ts":	`export declare function helper(): void;`,
 		}
 		session, _ := projecttestutil.Setup(files)
 
@@ -531,7 +531,7 @@ func TestProjectCollectionBuilder(t *testing.T) {
 		rootUri := lsproto.DocumentUri("file:///project/index.ts")
 		session.DidOpenFile(context.Background(), rootUri, 1, files["/project/index.ts"].(string), lsproto.LanguageKindTypeScript)
 		_, err := session.GetLanguageService(context.Background(), rootUri)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		// Step 2: Open the node_modules dependency file - should be in the configured project
 		depUri := lsproto.DocumentUri("file:///project/node_modules/dep/index.d.ts")
@@ -539,9 +539,9 @@ func TestProjectCollectionBuilder(t *testing.T) {
 
 		snapshot, release := session.Snapshot()
 		configuredProject := snapshot.ProjectCollection.ConfiguredProject(tspath.Path("/project/tsconfig.json"))
-		assert.Assert(t, configuredProject != nil, "configured project should exist")
+		require.True(t, configuredProject != nil, "configured project should exist")
 		defaultProject := snapshot.GetDefaultProject(depUri)
-		assert.Equal(t, defaultProject, configuredProject, "dependency should be in the configured project initially")
+		require.Equal(t, defaultProject, configuredProject, "dependency should be in the configured project initially")
 		release()
 
 		// Step 3: Delete the import from the root file
@@ -551,14 +551,14 @@ func TestProjectCollectionBuilder(t *testing.T) {
 
 		// Step 4: Request language service for the dependency - it should now be in an inferred project
 		ls, err := session.GetLanguageService(context.Background(), depUri)
-		assert.NilError(t, err)
-		assert.Assert(t, ls != nil, "language service should be available for dependency")
+		require.NoError(t, err)
+		require.True(t, ls != nil, "language service should be available for dependency")
 
 		snapshot, release = session.Snapshot()
 		defer release()
 		defaultProject = snapshot.GetDefaultProject(depUri)
-		assert.Assert(t, defaultProject != nil, "dependency should have a default project")
-		assert.Equal(t, defaultProject.Kind, project.KindInferred, "dependency should be in an inferred project after import is deleted")
+		require.True(t, defaultProject != nil, "dependency should have a default project")
+		require.Equal(t, defaultProject.Kind, project.KindInferred, "dependency should be in an inferred project after import is deleted")
 	})
 
 	t.Run("should update project on package.json change", func(t *testing.T) {
@@ -582,8 +582,8 @@ func TestProjectCollectionBuilder(t *testing.T) {
 					"#utils": "./src/utils.ts"
 				}
 			}`,
-			"/home/projects/myproject/src/index.ts": `import { add } from "#utils";`,
-			"/home/projects/myproject/src/utils.ts": `export function add(a: number, b: number) { return a + b; }`,
+			"/home/projects/myproject/src/index.ts":	`import { add } from "#utils";`,
+			"/home/projects/myproject/src/utils.ts":	`export function add(a: number, b: number) { return a + b; }`,
 		}
 
 		session, utils := projecttestutil.Setup(packageJsonFiles)
@@ -592,9 +592,9 @@ func TestProjectCollectionBuilder(t *testing.T) {
 
 		// Verify initial state: #utils resolves to utils.ts, so utils.ts is in the program
 		ls, err := session.GetLanguageService(context.Background(), indexUri)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		program := ls.GetProgram()
-		assert.Equal(t, len(program.GetSemanticDiagnostics(context.Background(), nil)), 0, "should have no diagnostics with correct package.json")
+		require.Equal(t, len(program.GetSemanticDiagnostics(context.Background(), nil)), 0, "should have no diagnostics with correct package.json")
 
 		// Now change the package.json to point #utils at a non-existent file
 		err = utils.FS().WriteFile("/home/projects/myproject/package.json", `{
@@ -604,18 +604,18 @@ func TestProjectCollectionBuilder(t *testing.T) {
 				"#utils": "./src/nonexistent.ts"
 			}
 		}`, false)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		session.DidChangeWatchedFiles(context.Background(), []*lsproto.FileEvent{
 			{
-				Uri:  lsproto.DocumentUri("file:///home/projects/myproject/package.json"),
-				Type: lsproto.FileChangeTypeChanged,
+				Uri:	lsproto.DocumentUri("file:///home/projects/myproject/package.json"),
+				Type:	lsproto.FileChangeTypeChanged,
 			},
 		})
 
 		ls, err = session.GetLanguageService(context.Background(), indexUri)
-		assert.NilError(t, err)
+		require.NoError(t, err)
 		updatedProgram := ls.GetProgram()
-		assert.Equal(t, len(updatedProgram.GetSemanticDiagnostics(context.Background(), nil)), 1, "should have diagnostics after package.json change")
+		require.Equal(t, len(updatedProgram.GetSemanticDiagnostics(context.Background(), nil)), 1, "should have diagnostics after package.json change")
 	})
 }
 
@@ -650,7 +650,7 @@ func filesForSolutionConfigFile(solutionRefs []string, compilerOptions string, o
 		"/user/username/projects/myproject/src/main.ts": `
 			import { foo } from './helpers/functions';
 			export { foo };`,
-		"/user/username/projects/myproject/src/helpers/functions.ts": `export const foo = 1;`,
+		"/user/username/projects/myproject/src/helpers/functions.ts":	`export const foo = 1;`,
 	}
 	return files
 }
@@ -676,7 +676,7 @@ func filesForIndirectProject(projectIndex int, compilerOptions string) map[strin
 				}
 			]
 		}`, compilerOptions, projectIndex),
-		fmt.Sprintf("/user/username/projects/myproject/indirect%d/main.ts", projectIndex): `export const indirect = 1;`,
+		fmt.Sprintf("/user/username/projects/myproject/indirect%d/main.ts", projectIndex):	`export const indirect = 1;`,
 	}
 	return files
 }

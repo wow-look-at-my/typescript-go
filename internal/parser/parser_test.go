@@ -16,7 +16,8 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil/fixtures"
 	"github.com/microsoft/typescript-go/internal/tspath"
 	"github.com/microsoft/typescript-go/internal/vfs/osvfs"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
+	"github.com/wow-look-at-my/testify/assert"
 )
 
 func BenchmarkParse(b *testing.B) {
@@ -30,8 +31,8 @@ func BenchmarkParse(b *testing.B) {
 			scriptKind := core.GetScriptKindFromFileName(fileName)
 
 			opts := ast.SourceFileParseOptions{
-				FileName: fileName,
-				Path:     path,
+				FileName:	fileName,
+				Path:		path,
 			}
 
 			for b.Loop() {
@@ -42,8 +43,8 @@ func BenchmarkParse(b *testing.B) {
 }
 
 type parsableFile struct {
-	path string
-	name string
+	path	string
+	name	string
 }
 
 func allParsableFiles(tb testing.TB, root string) iter.Seq[parsableFile] {
@@ -70,7 +71,7 @@ func allParsableFiles(tb testing.TB, root string) iter.Seq[parsableFile] {
 			}
 			return nil
 		})
-		assert.NilError(tb, err)
+		require.NoError(tb, err)
 	}
 }
 
@@ -95,7 +96,7 @@ func FuzzParser(f *testing.F) {
 
 		for file := range allParsableFiles(f, root) {
 			sourceText, err := os.ReadFile(file.path)
-			assert.NilError(f, err)
+			require.NoError(f, err)
 			extension := tspath.TryGetExtensionFromPath(file.path)
 			f.Add(extension, string(sourceText), false, false)
 		}
@@ -114,11 +115,11 @@ func FuzzParser(f *testing.F) {
 
 		for file := range allParsableFiles(f, testDir) {
 			sourceText, err := os.ReadFile(file.path)
-			assert.NilError(f, err)
+			require.NoError(f, err)
 
 			type testFile struct {
-				content string
-				name    string
+				content	string
+				name	string
 			}
 
 			testUnits, _, _, _, err := testrunner.ParseTestFilesAndSymlinks(
@@ -128,7 +129,7 @@ func FuzzParser(f *testing.F) {
 					return testFile{content: content, name: filename}, nil
 				},
 			)
-			assert.NilError(f, err)
+			require.NoError(f, err)
 
 			for _, unit := range testUnits {
 				extension := tspath.TryGetExtensionFromPath(unit.name)
@@ -149,11 +150,11 @@ func FuzzParser(f *testing.F) {
 		path := tspath.Path(fileName)
 
 		opts := ast.SourceFileParseOptions{
-			FileName: fileName,
-			Path:     path,
+			FileName:	fileName,
+			Path:		path,
 			ExternalModuleIndicatorOptions: ast.ExternalModuleIndicatorOptions{
-				JSX:   externalModuleIndicatorOptionsJSX,
-				Force: externalModuleIndicatorOptionsForce,
+				JSX:	externalModuleIndicatorOptionsJSX,
+				Force:	externalModuleIndicatorOptionsForce,
 			},
 		}
 
@@ -187,22 +188,20 @@ test("", async function () {
 })
 `
 	opts := ast.SourceFileParseOptions{
-		FileName: "/index.js",
-		Path:     "/index.js",
+		FileName:	"/index.js",
+		Path:		"/index.js",
 	}
 
 	file := parser.ParseSourceFile(opts, sourceText, core.ScriptKindJS)
 
 	for i := 1; i < len(file.ReparsedClones); i++ {
 		a, b := file.ReparsedClones[i-1], file.ReparsedClones[i]
-		if a.Pos() == b.Pos() && a.End() == b.End() && a.Kind == b.Kind {
-			t.Errorf("duplicate ReparsedClones at [%d] and [%d]: %s pos=%d end=%d", i-1, i, a.Kind.String(), a.Pos(), a.End())
-		}
+		assert.False(t, a.Pos() == b.Pos() && a.End() == b.End() && a.Kind == b.Kind)
+
 	}
 	for _, imp := range file.Imports() {
 		reparsed := ast.GetReparsedNodeForNode(imp)
-		if ast.GetSourceFileOfNode(reparsed) == nil {
-			t.Errorf("reparsed import at pos=%d has broken parent chain", imp.Pos())
-		}
+		assert.NotNil(t, ast.GetSourceFileOfNode(reparsed))
+
 	}
 }

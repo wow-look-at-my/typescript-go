@@ -5,16 +5,16 @@ import (
 	"math"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func assertEqualNumber(t *testing.T, got, want Number) {
 	t.Helper()
 
 	if got.IsNaN() || want.IsNaN() {
-		assert.Equal(t, got.IsNaN(), want.IsNaN(), "got: %v, want: %v", got, want)
+		require.Equal(t, got.IsNaN(), want.IsNaN(), "got: %v, want: %v", got, want)
 	} else {
-		assert.Equal(t, got, want)
+		require.Equal(t, got, want)
 	}
 }
 
@@ -27,10 +27,10 @@ func numberToBits(n Number) uint64 {
 }
 
 var toInt32Tests = []struct {
-	name  string
-	input Number
-	want  int32
-	bench bool
+	name	string
+	input	Number
+	want	int32
+	bench	bool
 }{
 	{"0.0", 0, 0, true},
 	{"-0.0", Number(negativeZero), 0, false},
@@ -86,7 +86,7 @@ func TestToInt32(t *testing.T) {
 	for _, test := range toInt32Tests {
 		t.Run(fmt.Sprintf("%s (%v)", test.name, float64(test.input)), func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, test.input.toInt32(), test.want)
+			require.Equal(t, test.input.toInt32(), test.want)
 		})
 	}
 }

@@ -10,13 +10,13 @@ import (
 	"github.com/microsoft/typescript-go/internal/core"
 	"github.com/microsoft/typescript-go/internal/parser"
 	"github.com/microsoft/typescript-go/internal/repo"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func parseSourceFile(code string) *ast.SourceFile {
 	return parser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: "/test.ts",
-		Path:     "/test.ts",
+		FileName:	"/test.ts",
+		Path:		"/test.ts",
 	}, code, core.ScriptKindTS)
 }
 
@@ -24,28 +24,28 @@ func TestDecodeSourceFile_Basic(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("let x = 1;")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
-	assert.Equal(t, decoded.AsNode().Kind, ast.KindSourceFile)
-	assert.Equal(t, decoded.FileName(), "/test.ts")
-	assert.Equal(t, decoded.Text(), "let x = 1;")
-	assert.Assert(t, decoded.Statements != nil)
-	assert.Assert(t, decoded.EndOfFileToken != nil)
+	require.NoError(t, err)
+	require.Equal(t, decoded.AsNode().Kind, ast.KindSourceFile)
+	require.Equal(t, decoded.FileName(), "/test.ts")
+	require.Equal(t, decoded.Text(), "let x = 1;")
+	require.True(t, decoded.Statements != nil)
+	require.True(t, decoded.EndOfFileToken != nil)
 }
 
 func TestDecodeSourceFile_Statements(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("let a = 1;\nlet b = 2;\nlet c = 3;")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
-	assert.Equal(t, len(decoded.Statements.Nodes), 3)
+	require.NoError(t, err)
+	require.Equal(t, len(decoded.Statements.Nodes), 3)
 	for i, stmt := range decoded.Statements.Nodes {
-		assert.Equal(t, stmt.Kind, ast.KindVariableStatement, "statement %d", i)
+		require.Equal(t, stmt.Kind, ast.KindVariableStatement, "statement %d", i)
 	}
 }
 
@@ -53,123 +53,123 @@ func TestDecodeSourceFile_VariableDeclaration(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("let x = 1;")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	varStmt := decoded.Statements.Nodes[0].AsVariableStatement()
-	assert.Assert(t, varStmt.DeclarationList != nil)
+	require.True(t, varStmt.DeclarationList != nil)
 	declList := varStmt.DeclarationList.AsVariableDeclarationList()
-	assert.Assert(t, declList.Declarations != nil)
-	assert.Equal(t, len(declList.Declarations.Nodes), 1)
+	require.True(t, declList.Declarations != nil)
+	require.Equal(t, len(declList.Declarations.Nodes), 1)
 
 	decl := declList.Declarations.Nodes[0].AsVariableDeclaration()
-	assert.Equal(t, decl.Name().Kind, ast.KindIdentifier)
-	assert.Equal(t, decl.Name().AsIdentifier().Text, "x")
-	assert.Assert(t, decl.Initializer != nil)
-	assert.Equal(t, decl.Initializer.Kind, ast.KindNumericLiteral)
-	assert.Equal(t, decl.Initializer.AsNumericLiteral().Text, "1")
+	require.Equal(t, decl.Name().Kind, ast.KindIdentifier)
+	require.Equal(t, decl.Name().AsIdentifier().Text, "x")
+	require.True(t, decl.Initializer != nil)
+	require.Equal(t, decl.Initializer.Kind, ast.KindNumericLiteral)
+	require.Equal(t, decl.Initializer.AsNumericLiteral().Text, "1")
 }
 
 func TestDecodeSourceFile_FunctionDeclaration(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("function add(a: number, b: number): number { return a + b; }")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	funcDecl := decoded.Statements.Nodes[0].AsFunctionDeclaration()
-	assert.Assert(t, funcDecl.Name() != nil)
-	assert.Equal(t, funcDecl.Name().AsIdentifier().Text, "add")
-	assert.Assert(t, funcDecl.Parameters != nil)
-	assert.Equal(t, len(funcDecl.Parameters.Nodes), 2)
-	assert.Assert(t, funcDecl.Type != nil)
-	assert.Assert(t, funcDecl.Body != nil)
+	require.True(t, funcDecl.Name() != nil)
+	require.Equal(t, funcDecl.Name().AsIdentifier().Text, "add")
+	require.True(t, funcDecl.Parameters != nil)
+	require.Equal(t, len(funcDecl.Parameters.Nodes), 2)
+	require.True(t, funcDecl.Type != nil)
+	require.True(t, funcDecl.Body != nil)
 
 	param0 := funcDecl.Parameters.Nodes[0].AsParameterDeclaration()
-	assert.Equal(t, param0.Name().AsIdentifier().Text, "a")
-	assert.Assert(t, param0.Type != nil)
+	require.Equal(t, param0.Name().AsIdentifier().Text, "a")
+	require.True(t, param0.Type != nil)
 }
 
 func TestDecodeSourceFile_ImportDeclaration(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile(`import { bar } from "bar";`)
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	imp := decoded.Statements.Nodes[0].AsImportDeclaration()
-	assert.Assert(t, imp.ImportClause != nil)
-	assert.Assert(t, imp.ModuleSpecifier != nil)
-	assert.Equal(t, imp.ModuleSpecifier.AsStringLiteral().Text, "bar")
+	require.True(t, imp.ImportClause != nil)
+	require.True(t, imp.ModuleSpecifier != nil)
+	require.Equal(t, imp.ModuleSpecifier.AsStringLiteral().Text, "bar")
 
 	clause := imp.ImportClause.AsImportClause()
-	assert.Assert(t, clause.NamedBindings != nil)
+	require.True(t, clause.NamedBindings != nil)
 	namedImports := clause.NamedBindings.AsNamedImports()
-	assert.Assert(t, namedImports.Elements != nil)
-	assert.Equal(t, len(namedImports.Elements.Nodes), 1)
+	require.True(t, namedImports.Elements != nil)
+	require.Equal(t, len(namedImports.Elements.Nodes), 1)
 	spec := namedImports.Elements.Nodes[0].AsImportSpecifier()
-	assert.Equal(t, spec.Name().AsIdentifier().Text, "bar")
+	require.Equal(t, spec.Name().AsIdentifier().Text, "bar")
 }
 
 func TestDecodeSourceFile_IfStatement(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("if (true) { } else { }")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	ifStmt := decoded.Statements.Nodes[0].AsIfStatement()
-	assert.Assert(t, ifStmt.Expression != nil)
-	assert.Assert(t, ifStmt.ThenStatement != nil)
-	assert.Assert(t, ifStmt.ElseStatement != nil)
-	assert.Equal(t, ifStmt.ThenStatement.Kind, ast.KindBlock)
-	assert.Equal(t, ifStmt.ElseStatement.Kind, ast.KindBlock)
+	require.True(t, ifStmt.Expression != nil)
+	require.True(t, ifStmt.ThenStatement != nil)
+	require.True(t, ifStmt.ElseStatement != nil)
+	require.Equal(t, ifStmt.ThenStatement.Kind, ast.KindBlock)
+	require.Equal(t, ifStmt.ElseStatement.Kind, ast.KindBlock)
 }
 
 func TestDecodeSourceFile_TemplateExpression(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("let x = `hello ${name} world`;")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	varDecl := decoded.Statements.Nodes[0].AsVariableStatement().DeclarationList.AsVariableDeclarationList().Declarations.Nodes[0].AsVariableDeclaration()
 	tmplExpr := varDecl.Initializer.AsTemplateExpression()
-	assert.Assert(t, tmplExpr.Head != nil)
-	assert.Equal(t, tmplExpr.Head.AsTemplateHead().Text, "hello ")
-	assert.Assert(t, tmplExpr.TemplateSpans != nil)
-	assert.Equal(t, len(tmplExpr.TemplateSpans.Nodes), 1)
+	require.True(t, tmplExpr.Head != nil)
+	require.Equal(t, tmplExpr.Head.AsTemplateHead().Text, "hello ")
+	require.True(t, tmplExpr.TemplateSpans != nil)
+	require.Equal(t, len(tmplExpr.TemplateSpans.Nodes), 1)
 
 	span := tmplExpr.TemplateSpans.Nodes[0].AsTemplateSpan()
-	assert.Assert(t, span.Expression != nil)
-	assert.Equal(t, span.Expression.Kind, ast.KindIdentifier)
-	assert.Assert(t, span.Literal != nil)
-	assert.Equal(t, span.Literal.AsTemplateTail().Text, " world")
+	require.True(t, span.Expression != nil)
+	require.Equal(t, span.Expression.Kind, ast.KindIdentifier)
+	require.True(t, span.Literal != nil)
+	require.Equal(t, span.Literal.AsTemplateTail().Text, " world")
 }
 
 func TestDecodeSourceFile_ExportModifier(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("export function foo() {}")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	funcDecl := decoded.Statements.Nodes[0].AsFunctionDeclaration()
-	assert.Assert(t, funcDecl.Modifiers() != nil)
-	assert.Equal(t, len(funcDecl.Modifiers().Nodes), 1)
-	assert.Equal(t, funcDecl.Modifiers().Nodes[0].Kind, ast.KindExportKeyword)
+	require.True(t, funcDecl.Modifiers() != nil)
+	require.Equal(t, len(funcDecl.Modifiers().Nodes), 1)
+	require.Equal(t, funcDecl.Modifiers().Nodes[0].Kind, ast.KindExportKeyword)
 }
 
 func TestDecodeSourceFile_Positions(t *testing.T) {
@@ -177,30 +177,30 @@ func TestDecodeSourceFile_Positions(t *testing.T) {
 	code := "let x = 1;"
 	sf := parseSourceFile(code)
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, decoded.AsNode().Pos(), 0)
-	assert.Equal(t, decoded.AsNode().End(), len(code))
+	require.Equal(t, decoded.AsNode().Pos(), 0)
+	require.Equal(t, decoded.AsNode().End(), len(code))
 }
 
 func TestDecodeSourceFile_ClassDeclaration(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("class Foo { bar(): void {} }")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	classDecl := decoded.Statements.Nodes[0].AsClassDeclaration()
-	assert.Assert(t, classDecl.Name() != nil)
-	assert.Equal(t, classDecl.Name().AsIdentifier().Text, "Foo")
-	assert.Assert(t, classDecl.Members != nil)
-	assert.Equal(t, len(classDecl.Members.Nodes), 1)
-	assert.Equal(t, classDecl.Members.Nodes[0].Kind, ast.KindMethodDeclaration)
+	require.True(t, classDecl.Name() != nil)
+	require.Equal(t, classDecl.Name().AsIdentifier().Text, "Foo")
+	require.True(t, classDecl.Members != nil)
+	require.Equal(t, len(classDecl.Members.Nodes), 1)
+	require.Equal(t, classDecl.Members.Nodes[0].Kind, ast.KindMethodDeclaration)
 }
 
 func TestDecodeNodes_SubtreeRoundTrip(t *testing.T) {
@@ -216,60 +216,60 @@ func TestDecodeNodes_SubtreeRoundTrip(t *testing.T) {
 		return node
 	}
 	visitor.VisitEachChild(sf.AsNode())
-	assert.Assert(t, funcNode != nil)
+	require.True(t, funcNode != nil)
 
 	buf, err := encoder.EncodeNode(funcNode, sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeNodes(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, decoded.Kind, ast.KindFunctionDeclaration)
+	require.Equal(t, decoded.Kind, ast.KindFunctionDeclaration)
 	funcDecl := decoded.AsFunctionDeclaration()
-	assert.Assert(t, funcDecl.Name() != nil)
-	assert.Equal(t, funcDecl.Name().AsIdentifier().Text, "greet")
-	assert.Assert(t, funcDecl.Parameters != nil)
-	assert.Equal(t, len(funcDecl.Parameters.Nodes), 1)
-	assert.Assert(t, funcDecl.Body != nil)
+	require.True(t, funcDecl.Name() != nil)
+	require.Equal(t, funcDecl.Name().AsIdentifier().Text, "greet")
+	require.True(t, funcDecl.Parameters != nil)
+	require.Equal(t, len(funcDecl.Parameters.Nodes), 1)
+	require.True(t, funcDecl.Body != nil)
 }
 
 func TestDecodeSourceFile_BinaryExpression(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile("let x = 1 + 2;")
 	buf, err := encoder.EncodeSourceFile(sf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decoded, err := encoder.DecodeSourceFile(buf)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 
 	decl := decoded.Statements.Nodes[0].AsVariableStatement().DeclarationList.AsVariableDeclarationList().Declarations.Nodes[0].AsVariableDeclaration()
 	binExpr := decl.Initializer.AsBinaryExpression()
-	assert.Assert(t, binExpr.Left != nil)
-	assert.Assert(t, binExpr.Right != nil)
-	assert.Assert(t, binExpr.OperatorToken != nil)
-	assert.Equal(t, binExpr.Left.Kind, ast.KindNumericLiteral)
-	assert.Equal(t, binExpr.Right.Kind, ast.KindNumericLiteral)
+	require.True(t, binExpr.Left != nil)
+	require.True(t, binExpr.Right != nil)
+	require.True(t, binExpr.OperatorToken != nil)
+	require.Equal(t, binExpr.Left.Kind, ast.KindNumericLiteral)
+	require.Equal(t, binExpr.Right.Kind, ast.KindNumericLiteral)
 }
 
 func BenchmarkDecodeSourceFile(b *testing.B) {
 	repo.SkipIfNoTypeScriptSubmodule(b)
 	filePath := filepath.Join(repo.TypeScriptSubmodulePath(), "src/compiler/checker.ts")
 	fileContent, err := os.ReadFile(filePath)
-	assert.NilError(b, err)
+	require.NoError(b, err)
 	code := string(fileContent)
 	sourceFile := parser.ParseSourceFile(ast.SourceFileParseOptions{
-		FileName: "/checker.ts",
-		Path:     "/checker.ts",
+		FileName:	"/checker.ts",
+		Path:		"/checker.ts",
 	}, code, core.ScriptKindTS)
 
 	buf, err := encoder.EncodeSourceFile(sourceFile)
-	assert.NilError(b, err)
+	require.NoError(b, err)
 
 	b.Run("parse", func(b *testing.B) {
 		for b.Loop() {
 			parser.ParseSourceFile(ast.SourceFileParseOptions{
-				FileName: "/checker.ts",
-				Path:     "/checker.ts",
+				FileName:	"/checker.ts",
+				Path:		"/checker.ts",
 			}, code, core.ScriptKindTS)
 		}
 	})
@@ -277,7 +277,7 @@ func BenchmarkDecodeSourceFile(b *testing.B) {
 	b.Run("decode", func(b *testing.B) {
 		for b.Loop() {
 			_, decodeErr := encoder.DecodeSourceFile(buf)
-			assert.NilError(b, decodeErr)
+			require.NoError(b, decodeErr)
 		}
 	})
 }

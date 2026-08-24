@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/typescript-go/internal/vfs/vfstest"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestWrap(t *testing.T) {
@@ -20,7 +20,7 @@ func TestWrap(t *testing.T) {
 		field := wrapperType.Field(i)
 		if field.IsExported() {
 			fieldValue := wrapperValue.Field(i)
-			assert.Assert(t, !fieldValue.IsZero(), "field %s should not be zero; update Wrap", field.Name)
+			require.True(t, !fieldValue.IsZero(), "field %s should not be zero; update Wrap", field.Name)
 		}
 	}
 }

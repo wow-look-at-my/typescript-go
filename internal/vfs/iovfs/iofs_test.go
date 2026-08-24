@@ -8,7 +8,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/testutil"
 	"github.com/microsoft/typescript-go/internal/vfs"
 	"github.com/microsoft/typescript-go/internal/vfs/iovfs"
-	"gotest.tools/v3/assert"
+	"github.com/wow-look-at-my/testify/require"
 )
 
 func TestIOFS(t *testing.T) {
@@ -35,12 +35,12 @@ func TestIOFS(t *testing.T) {
 		t.Parallel()
 
 		content, ok := fs.ReadFile("/foo.ts")
-		assert.Assert(t, ok)
-		assert.Equal(t, content, "hello, world")
+		require.True(t, ok)
+		require.Equal(t, content, "hello, world")
 
 		content, ok = fs.ReadFile("/does/not/exist.ts")
-		assert.Assert(t, !ok)
-		assert.Equal(t, content, "")
+		require.True(t, !ok)
+		require.Equal(t, content, "")
 	})
 
 	t.Run("ReadFileUnrooted", func(t *testing.T) {
@@ -52,26 +52,26 @@ func TestIOFS(t *testing.T) {
 	t.Run("FileExists", func(t *testing.T) {
 		t.Parallel()
 
-		assert.Assert(t, fs.FileExists("/foo.ts"))
-		assert.Assert(t, !fs.FileExists("/bar"))
+		require.True(t, fs.FileExists("/foo.ts"))
+		require.True(t, !fs.FileExists("/bar"))
 	})
 
 	t.Run("DirectoryExists", func(t *testing.T) {
 		t.Parallel()
 
-		assert.Assert(t, fs.DirectoryExists("/"))
-		assert.Assert(t, fs.DirectoryExists("/dir1"))
-		assert.Assert(t, fs.DirectoryExists("/dir1/"))
-		assert.Assert(t, fs.DirectoryExists("/dir1/./"))
-		assert.Assert(t, !fs.DirectoryExists("/bar"))
+		require.True(t, fs.DirectoryExists("/"))
+		require.True(t, fs.DirectoryExists("/dir1"))
+		require.True(t, fs.DirectoryExists("/dir1/"))
+		require.True(t, fs.DirectoryExists("/dir1/./"))
+		require.True(t, !fs.DirectoryExists("/bar"))
 	})
 
 	t.Run("GetAccessibleEntries", func(t *testing.T) {
 		t.Parallel()
 
 		entries := fs.GetAccessibleEntries("/")
-		assert.DeepEqual(t, entries.Directories, []string{"dir1", "dir2"})
-		assert.DeepEqual(t, entries.Files, []string{"foo.ts"})
+		require.Equal(t, entries.Directories, []string{"dir1", "dir2"})
+		require.Equal(t, entries.Files, []string{"foo.ts"})
 	})
 
 	t.Run("WalkDir", func(t *testing.T) {
@@ -87,11 +87,11 @@ func TestIOFS(t *testing.T) {
 			}
 			return nil
 		})
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		slices.Sort(files)
 
-		assert.DeepEqual(t, files, []string{"/dir1/file1.ts", "/dir1/file2.ts", "/dir2/file1.ts", "/foo.ts"})
+		require.Equal(t, files, []string{"/dir1/file1.ts", "/dir1/file2.ts", "/dir2/file1.ts", "/foo.ts"})
 	})
 
 	t.Run("WalkDirSkip", func(t *testing.T) {
@@ -112,23 +112,23 @@ func TestIOFS(t *testing.T) {
 
 			return vfs.SkipDir
 		})
-		assert.NilError(t, err)
+		require.NoError(t, err)
 
 		slices.Sort(files)
 
-		assert.DeepEqual(t, files, []string{"/foo.ts"})
+		require.Equal(t, files, []string{"/foo.ts"})
 	})
 
 	t.Run("Realpath", func(t *testing.T) {
 		t.Parallel()
 
 		realpath := fs.Realpath("/foo.ts")
-		assert.Equal(t, realpath, "/foo.ts")
+		require.Equal(t, realpath, "/foo.ts")
 	})
 
 	t.Run("UseCaseSensitiveFileNames", func(t *testing.T) {
 		t.Parallel()
 
-		assert.Assert(t, fs.UseCaseSensitiveFileNames())
+		require.True(t, fs.UseCaseSensitiveFileNames())
 	})
 }

@@ -171,7 +171,7 @@ func prepareDeclarationCompilationContext(
 	// Current directory is needed for rwcRunner to be able to use currentDirectory defined in json file
 	currentDirectory string,
 ) *declarationCompilationContext {
-	if options.Declaration.IsTrue() && len(result.Diagnostics) == 0 {
+	if options.Declaration.IsTrue() && len(result.Diagnostics) == 0 && options.OutFile == "" {
 		if options.EmitDeclarationOnly.IsTrue() {
 			if result.JS.Size() > 0 || (result.DTS.Size() == 0 && !options.NoEmit.IsTrue()) {
 				panic("Only declaration files should be generated when emitDeclarationOnly:true")
